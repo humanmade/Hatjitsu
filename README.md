@@ -26,7 +26,9 @@ npm start
 Installation (Docker)
 =====================
 
-    just download Dockerfile and docker-compose.yml from the repository
+Just download Dockerfile and docker-compose.yml from the repository.
+
+```dockerfile
     run:
         docker-compose up -d
-
+```
