@@ -39,7 +39,7 @@
         <div class="card--name">{{connection.name}}</div>
       </div>
 
-      <div title="{{connection.name}}" ng-repeat="connection in connections track by $index" ng-hide="connection.vote != null" class="card card--2-sided vote btn btn--tertiary btn--small" disabled style="color: {{connection.color}}; border-color: {{connection.color}};">
+      <div title="{{connection.name}}" ng-repeat="connection in connections track by $index" ng-hide="! connection.voter || (connection.vote != null)" class="card card--2-sided vote btn btn--tertiary btn--small" disabled style="color: {{connection.color}}; border-color: {{connection.color}};">
         <div class="card--side-1">?</div>
         <div class="card--side-2">?</div>
         <div class="card--name">{{connection.name}}</div>
