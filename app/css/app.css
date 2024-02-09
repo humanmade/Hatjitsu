@@ -25,6 +25,10 @@ body {
   display: none;
 }
 
+.card[disabled] {
+  border-style: dashed;
+}
+
 .votePanel .cards {
   justify-content: center;
   min-height: 150px;
