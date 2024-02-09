@@ -138,7 +138,7 @@ Room.prototype.enter = function(socket, data) {
         'pingu',
         'dobby',
         'yugi',
-        'harry seldon',
+        'hari seldon',
         'plant pot'
       ]) ],
       separator: ' ',
