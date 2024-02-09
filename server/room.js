@@ -80,7 +80,6 @@ Room.prototype.enter = function(socket, data) {
         'salmon',
         'steelblue',
         'teal',
-        'tomato',
         'yellowgreen',
         '#2D3250',
         '#BE3144',
