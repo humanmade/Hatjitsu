@@ -1,5 +1,5 @@
 var _ = require('underscore')._;
-const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
+const { uniqueNamesGenerator, adjectives, animals } = require('unique-names-generator');
 
 var Room = function(io, id ) {
   this.io = io;
@@ -81,7 +81,15 @@ Room.prototype.enter = function(socket, data) {
         'steelblue',
         'teal',
         'tomato',
-        'yellowgreen'
+        'yellowgreen',
+        '#2D3250',
+        '#BE3144',
+        '#A2678A',
+        '#232D3F',
+        '#144272',
+        '#46C2CB',
+        '#30475E',
+        '#30475E'
       ] ],
       length: 1
     });
