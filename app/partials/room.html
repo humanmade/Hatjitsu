@@ -75,7 +75,7 @@
       <div ng-show="voter">
         <div ng-switch on="voted">
           <p ng-switch-when="false">Hello <strong style="color: {{myColor}}">{{myName}}</strong>, please choose your estimate...</p>
-          <p ng-switch-when="true">Hello <strong style="color: {{myColor}}">{{myName}}</strong>, your current estimate is <strong style="color: {{myColor}}">{{myVote}}</strong>.</p>
+          <p ng-switch-when="true">Hello <strong style="color: {{myColor}}">{{myName}}</strong>.</p>
         </div>
       </div>
       <p ng-hide="voter">Hello <strong>spectator</strong>, you have chosen not to vote.</p>
