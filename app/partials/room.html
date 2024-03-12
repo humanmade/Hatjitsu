@@ -1,6 +1,6 @@
 <div ng-init="configureRoom()">
   <div class="switch">
-    <label class="label" ng-disabled="forceRevealDisable" data-on="You are a voter" data-off="You are not a voter" for="voter">
+    <label class="label" ng-disabled="forceRevealDisable" data-on="You are a voter" data-off="You are a spectator" for="voter">
       <input type="checkbox" ng-model="voter" ng-disabled="forceRevealDisable" ng-change="toggleVoter()" id="voter"title="You can toggle voting/spectating while voting is in progress.">
       <span ng-show="voter" title="You can toggle voting/spectating while voting is in progress.">I am voting</span>
       <span ng-show="!voter" title="You can toggle voting/spectating while voting is in progress.">Spectating</span>
