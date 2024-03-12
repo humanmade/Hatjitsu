@@ -277,3 +277,10 @@ h1.header__text {
   font-size: 1rem;
   display: inline-block;
 }
+
+.post-vote-controls {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+}
+

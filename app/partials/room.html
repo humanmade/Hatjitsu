@@ -61,6 +61,14 @@
         <div class="card--name">{{connection.name}}</div>
       </div>
     </div>
+    <div
+      class="post-vote-controls"
+      ng-show="forceRevealDisable"
+    >
+      <button ng-click="resetVote()" class="btn btn--small" title="Start a new vote">
+        Start New Vote
+      </button>
+    </div>
 
   </section>
 
