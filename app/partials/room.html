@@ -78,7 +78,7 @@
           <p ng-switch-when="true">Hello <strong style="color: {{myColor}}">{{myName}}</strong>.</p>
         </div>
       </div>
-      <p ng-hide="voter">Hello <strong>spectator</strong>, you have chosen not to vote.</p>
+      <p ng-hide="voter">Hello <strong>spectator <span style="color: {{myColor}}">{{myName}}</span></strong>, you have chosen not to vote.</p>
     </div>
 
     <div ng-switch on="showCustom">
