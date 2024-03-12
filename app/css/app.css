@@ -250,6 +250,25 @@ body {
   margin-bottom: 0.5em;
 }
 
+@media screen and (max-width: 30rem) {
+  .header {
+    margin: 0.25rem 0;
+  }
+
+  .header .header__text {
+    font-size: 1.8rem;
+    line-height: 3.3325rem;
+  }
+}
+
+
+@media screen and (max-width: 25rem) {
+  .header .header__text {
+    font-size: 1.6rem;
+    line-height: 3.3325rem;
+  }
+}
+
 .switch {
   margin: 1.66667rem 0;
 }
