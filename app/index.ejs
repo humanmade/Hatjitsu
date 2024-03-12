@@ -50,10 +50,10 @@
         </header>
 
         <div class="alert">
-          <div class="activity" ng-show="activity"><span class="loading--red loading--active"></span></div>
-          <div class="socketMessage" class="notification" ng-show="socketMessage" ng-bind="socketMessage"></div>
-          <div class="appError" class="notification" ng-show="errorMessage" ng-bind="errorMessage"></div>
-          <div class="message" class="notification" ng-show="message" ng-bind="message"></div>
+          <div class="activity notification" ng-show="activity"><span class="loading--white loading--active"></span></div>
+          <div class="socketMessage notification" ng-show="socketMessage" ng-bind="socketMessage"></div>
+          <div class="appError notification" ng-show="errorMessage" ng-bind="errorMessage"></div>
+          <div class="message notification" ng-show="message" ng-bind="message"></div>
         </div>
 
         <div class="content" ng-view></div>
