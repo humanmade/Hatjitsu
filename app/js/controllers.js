@@ -226,7 +226,6 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     }
 
     $scope.connections = roomObj.connections;
-    console.log( roomObj );
     $scope.humanCount = $scope.connections.length;
     $scope.cardPack = roomObj.cardPack;
     $scope.forcedReveal = roomObj.forcedReveal;
