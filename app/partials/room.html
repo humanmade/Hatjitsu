@@ -1,9 +1,9 @@
 <div ng-init="configureRoom()">
   <div class="switch">
     <label class="label" ng-disabled="forceRevealDisable" data-on="You are a voter" data-off="You are not a voter" for="voter">
-      <input type="checkbox" ng-model="voter" ng-disabled="forceRevealDisable" ng-change="toggleVoter()" id="voter" >
-      <span ng-show="voter">I am voting</span>
-      <span ng-show="!voter">Spectating</span>
+      <input type="checkbox" ng-model="voter" ng-disabled="forceRevealDisable" ng-change="toggleVoter()" id="voter"title="You can toggle voting/spectating while voting is in progress.">
+      <span ng-show="voter" title="You can toggle voting/spectating while voting is in progress.">I am voting</span>
+      <span ng-show="!voter" title="You can toggle voting/spectating while voting is in progress.">Spectating</span>
     </label>
     <button ng-click="resetVote()" class="btn btn--small" title="Start a new vote">
       Reset
@@ -28,18 +28,34 @@
             <li class="dropdown__item"><a href="#" ng-model="cardPack" id="deckCustom" ng-click="setCustomPack()">Custom</a></li>
           </ul>
         </div>
+        <strong class="admin-indicator" ng-switch on="showAdmin">⚡️ You Are The Room Admin</strong>
       </div>
     </div>
   </div>
   <section class="votePanel" >
     <div class="cards{{votingState}}" id="chosenCards">
-      <div title="{{connection.name}}" ng-repeat="connection in connections track by $index" ng-hide="connection.vote == null" ng-click="unvote(connection.vote.sessionId)" class="card card--2-sided vote btn btn--tertiary btn--small" selectedvote style="color: {{connection.color}}; border-color: {{connection.color}};">
+      <div
+        title="{{(connection.forcedReveal || connection.votes.length === connection.voterCount) ? '' : connection.name}}"
+        ng-repeat="connection in connections track by $index"
+        ng-hide="! connection.voter || (connection.vote == null)"
+        ng-click="unvote(connection.vote.sessionId)"
+        class="card card--2-sided vote btn btn--tertiary btn--small"
+        selectedvote
+        style="color: {{ votingState ? 'inherit' : connection.color}}; border-color: {{votingState ? 'inherit' : connection.color}};"
+      >
         <div class="card--side-1">&#10003;</div>
         <div class="card--side-2">{{connection.vote}}</div>
-        <div class="card--name">{{connection.name}}</div>
+        <div class="card--name">{{votingState ? 'Mystery voter' : connection.name}}</div>
       </div>
 
-      <div title="{{connection.name}}" ng-repeat="connection in connections track by $index" ng-hide="! connection.voter || (connection.vote != null)" class="card card--2-sided vote btn btn--tertiary btn--small" disabled style="color: {{connection.color}}; border-color: {{connection.color}};">
+      <div
+        title="{{(connection.forcedReveal || connection.votes.length === connection.voterCount) ? '' : connection.name}}"
+        ng-repeat="connection in connections track by $index"
+        ng-hide="! connection.voter || (connection.vote != null)"
+        class="card card--2-sided vote btn btn--tertiary btn--small"
+        disabled
+        style="color: {{connection.color}}; border-color: {{connection.color}};"
+      >
         <div class="card--side-1">?</div>
         <div class="card--side-2">?</div>
         <div class="card--name">{{connection.name}}</div>
@@ -52,7 +68,7 @@
     <div class="cardPanel-meta">
       <div ng-show="voter">
         <div ng-switch on="voted">
-          <p ng-switch-when="false">Hello <strong style="color: {{myColor}}">{{myName}}</strong>, choose your estimate...</p>
+          <p ng-switch-when="false">Hello <strong style="color: {{myColor}}">{{myName}}</strong>, please choose your estimate...</p>
           <p ng-switch-when="true">Hello <strong style="color: {{myColor}}">{{myName}}</strong>, your current estimate is <strong style="color: {{myColor}}">{{myVote}}</strong>.</p>
         </div>
       </div>

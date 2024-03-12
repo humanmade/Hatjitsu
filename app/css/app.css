@@ -270,3 +270,10 @@ body {
 h1.header__text {
   display: inline-block;
 }
+
+.admin-indicator {
+  vertical-align: text-bottom;
+  line-height: 1.555rem;
+  font-size: 1rem;
+  display: inline-block;
+}

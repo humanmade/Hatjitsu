@@ -138,7 +138,6 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('reset vote', function (data, callback) {
     statsSocketMessagesReceived++;
-    // console.log("on reset vote  received for " + data.id, socket.id, data);
     var room = lobby.getRoom(data.id);
     if (room.error) {
       callback( { error: room.error });
@@ -161,7 +160,6 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('toggle voter', function (data, callback) {
     statsSocketMessagesReceived++;
-    // console.log("on toggle voter for " + data.id, socket.id, data);
     var room = lobby.getRoom(data.id);
     if (room.error) {
       callback( { error: room.error });
