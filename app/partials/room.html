@@ -34,13 +34,28 @@
   </div>
   <section class="votePanel" >
     <div class="cards{{votingState}}" id="chosenCards">
-      <div title="{{connection.name}}" ng-repeat="connection in connections track by $index" ng-hide="connection.vote == null" ng-click="unvote(connection.vote.sessionId)" class="card card--2-sided vote btn btn--tertiary btn--small" selectedvote style="color: {{connection.color}}; border-color: {{connection.color}};">
+      <div
+        title="{{(connection.forcedReveal || connection.votes.length === connection.voterCount) ? '' : connection.name}}"
+        ng-repeat="connection in connections track by $index"
+        ng-hide="! connection.voter || (connection.vote == null)"
+        ng-click="unvote(connection.vote.sessionId)"
+        class="card card--2-sided vote btn btn--tertiary btn--small"
+        selectedvote
+        style="color: {{ votingState ? 'inherit' : connection.color}}; border-color: {{votingState ? 'inherit' : connection.color}};"
+      >
         <div class="card--side-1">&#10003;</div>
         <div class="card--side-2">{{connection.vote}}</div>
-        <div class="card--name">{{connection.name}}</div>
+        <div class="card--name">{{votingState ? 'Mystery voter' : connection.name}}</div>
       </div>
 
-      <div title="{{connection.name}}" ng-repeat="connection in connections track by $index" ng-hide="! connection.voter || (connection.vote != null)" class="card card--2-sided vote btn btn--tertiary btn--small" disabled style="color: {{connection.color}}; border-color: {{connection.color}};">
+      <div
+        title="{{(connection.forcedReveal || connection.votes.length === connection.voterCount) ? '' : connection.name}}"
+        ng-repeat="connection in connections track by $index"
+        ng-hide="! connection.voter || (connection.vote != null)"
+        class="card card--2-sided vote btn btn--tertiary btn--small"
+        disabled
+        style="color: {{connection.color}}; border-color: {{connection.color}};"
+      >
         <div class="card--side-1">?</div>
         <div class="card--side-2">?</div>
         <div class="card--name">{{connection.name}}</div>
