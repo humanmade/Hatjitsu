@@ -167,11 +167,14 @@ Room.prototype.enter = function(socket, data) {
 }
 
 Room.prototype.leave = function(socket) {
-  var connection = _.find(this.connections, function(c) {
+  let connection = _.find(this.connections, (c) => {
     if ( ! c ) {
       return false;
     }
-    return (c.socketIds.length > 0);
+    if (c.socketIds.length == 0) {
+      return false;
+    }
+    return c.socketIds.includes( socket.id );
   });
   if (connection && connection.sessionId) {
     console.log( 'eliminating socket with ID: ' + socket.id, JSON.stringify( this.connections[connection.sessionId].socketIds ) );
