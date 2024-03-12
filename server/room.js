@@ -227,7 +227,9 @@ Room.prototype.destroyVote = function(socket, data) {
 
 Room.prototype.resetVote = function() {
   _.forEach(this.connections, function(c) {
-    c.vote = null;
+    if ( c ) {
+      c.vote = null;
+    }
   })
   this.forcedReveal = false;
   this.io.sockets.in(this.id).emit('vote reset');
