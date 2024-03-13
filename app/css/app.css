@@ -170,57 +170,36 @@ body {
 }
 
 /*
-
   Alerts
-
 */
 .alert {
   z-index: 3;
-  top: 0;
+  bottom: 0;
   left: 0;
-  width: 100%;
+  max-width: 300px;
   position: fixed;
+  display: flex;
+  flex-direction: column-reverse;
 }
-@media screen and (min-width: 55em) {
-  .alert {
-    position: absolute;
-  }
-}
-.alert .activity {
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
-  margin-right: 0.2em;
-  float: right;
-  text-align: right;
-}
-.socketMessage,
-.appError,
-.message {
+
+.notification {
   padding: 0 2em 0 0.5em;
   line-height: 1.5em;
-  margin: 1em;
-  padding: 1em 2em;
+  margin: 0.25em;
+  padding: 0.5em 1em;
   max-width: 100%;
   border-radius: 4px;
-  color: rgba(0,0,0,.7);
-}
-
-.socketMessage:empty,
-.appError:empty,
-.message:empty {
-  display: none;
-}
-
-.message {
-  background-color: #ffdd57;
-}
-.socketMessage {
+  font-size: 0.9em;
   background-color: black;
   color: #fff;
 }
-.appError {
+
+.notification:empty {
+  display: none;
+}
+
+.notification.appError {
   background-color: #f14668;
-  color: #fff;
 }
 /*
 
