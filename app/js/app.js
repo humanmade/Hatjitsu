@@ -14,7 +14,7 @@ angular.module('pokerApp', ['pokerApp.filters', 'pokerApp.services', 'pokerApp.d
     $routeProvider.when('/', { templateUrl: '/partials/lobby.html', controller: LobbyCtrl});
     $routeProvider.when('/room/:roomId', { templateUrl: '/partials/room.html', controller: RoomCtrl});
     $routeProvider.otherwise({redirectTo: '/'});
-  }]);
+  }]).controller('MainCtrl', MainCtrl);
 
 function getCookie(name) {
   var cookieArr = document.cookie.split(";");
