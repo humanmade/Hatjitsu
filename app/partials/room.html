@@ -85,7 +85,7 @@
       <div ng-switch-when="true">
         <section class="cardPanel" ng-show="voter">
           <div class="cards{{cardsState}}">
-            <input ng-model="customPack" ui-enter="setCardPack(customPack)" name="packfield" id="packfield" type="tel" maxlength="50" placeholder="comma separated values" class="form__field" autofocus/>
+            <input ng-model="customPack" ui-enter="setCardPack(customPack)" name="packfield" id="packfield" type="tel" maxlength="200" placeholder="comma separated values" class="form__field" autofocus/>
             <button ng-click="setCardPack(customPack)" class="btn">Set Custom Pack</button>
           </div>
         </section>
