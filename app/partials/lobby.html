@@ -4,7 +4,7 @@
 
   <form>
     <label for="roomfield">Enter room number</label>
-    <input ng-model="room" ui-enter="enterRoom(room)" name="roomfield" id="roomfield" type="tel" maxlength="5" placeholder="room no" class="roomUrl form__field form__field--code" autofocus/>
+    <input ng-model="room" ui-enter="enterRoom(room)" name="roomfield" id="roomfield" type="tel" maxlength="25" placeholder="room no" class="roomUrl form__field form__field--code" autofocus/>
     <button ng-click="enterRoom(room)" class="btn" title="Join an existing planning poker room" ng-disabled="{{disableButtons}}" type="submit">Join room</button>
   </form>
   <form>
