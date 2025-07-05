@@ -170,7 +170,19 @@ body {
 .dropdown .dropdown__item {
   display: block;
   text-decoration: none;
+}
+
+.dropdown .dropdown__item > a {
+  width: 100%;
+  display: inline-block;
   padding: 10px 20px;
+  text-decoration: none;
+  border-bottom:0;
+}
+
+.dropdown .dropdown__item > a:hover {
+  color: white;
+  background: #D24632;
 }
 
 /*
