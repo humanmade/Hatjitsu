@@ -1,9 +1,9 @@
 <div class="lobby">
   <h3>Distributed scrum <span>planning poker</span> for estimating agile projects.</h3>
-  <p>First person to <strong>create</strong> the room is the moderator. <strong>Share</strong> the url or room number with other team members to <strong>join</strong> the room.</p>
+  <p>First person to <strong>create</strong> the room is the moderator. <strong>Share</strong> the url or room ID with other team members to <strong>join</strong> the room.</p>
 
   <form>
-    <label for="roomfield">Enter room number</label>
+    <label for="roomfield">Enter a room ID</label>
     <input ng-model="room" ui-enter="enterRoom(room)" name="roomfield" id="roomfield" type="tel" maxlength="25" placeholder="room no" class="roomUrl form__field form__field--code" autofocus/>
     <button ng-click="enterRoom(room)" class="btn" title="Join an existing planning poker room" ng-disabled="{{disableButtons}}" type="submit">Join room</button>
   </form>
