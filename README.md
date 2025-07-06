@@ -1,10 +1,8 @@
-HM Agile Poker Planning
-========
+# HM Planning Poker
 
 Originally Hatjitsu, create disposable online [Planning Poker](http://en.wikipedia.org/wiki/Planning_poker) rooms for quick and easy estimations.
 
-Features
-========
+## Features
 
 * Simple interface
 * No login/signup required
@@ -13,22 +11,12 @@ Features
 * Multiple planning card decks
 * Adaptive design allows to work on desktop, tablet and mobile
 
-Installation
-============
+## Installation
 
 ```sh
-npm install -d
 nvm use
+npm install -d
 npm start
 ```
 
 [http://localhost:5099](http://localhost:5099)
-
-Installation (Docker)
-=====================
-
-just download Dockerfile and docker-compose.yml from the repository
-
-    run:
-        docker-compose up -d
-

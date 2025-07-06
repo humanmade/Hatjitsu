@@ -6,7 +6,7 @@ module.exports = {
     packAssets: false
   },
   production: {
-    hostname: "hat.jit.su",
+    hostname: "planningpoker.hmn.md",
     port: 80,
     packAssets: true
   }
