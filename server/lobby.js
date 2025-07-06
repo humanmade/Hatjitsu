@@ -28,23 +28,22 @@ Lobby.prototype.createRoom = function(id) {
 };
 
 Lobby.prototype.createUniqueURL = function() {
-  var text = ""
-    , possible = "0123456789"
-    , i
-    ;
+  var text = '',
+		possible = '0123456789',
+		i;
   for ( i = 0; i < 5; i++ ) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
+	}
   return text;
 };
 
 Lobby.prototype.joinRoom = function(socket, data) {
   if ( ! data.id ) {
-    return  { error: 'Invalid or missing Room ID'};
+    return  { error: 'Invalid or missing Room ID' };
   }
 
   if( ! ( data.id in this.rooms ) ) {
-    console.log( "creating new room from URL with: " + data.id );
+    console.log( 'Creating new room from URL with: ' + data.id );
     this.createRoom( data.id );
   }
 
@@ -64,7 +63,7 @@ Lobby.prototype.getRoom = function(id) {
   if (room) {
     return room;
   } else {
-    return { error: 'Sorry, this room no longer exists ...'};
+    return { error: 'Sorry, this room no longer exists ...' };
   }
 };
 
@@ -86,6 +85,5 @@ Lobby.prototype.broadcastDisconnect = function(socket) {
     }
   } );
 };
-
 
 exports.Lobby = Lobby;

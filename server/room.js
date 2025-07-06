@@ -168,32 +168,34 @@ Room.prototype.enter = function(socket, data) {
   // console.log("room entered as " + socket.id);
   if (this.connections[data.sessionId]) {
     this.connections[data.sessionId].socketIds.push( socket.id );
-  } else {
-    // Used to colour code the cards and names
-    const color = uniqueNamesGenerator({
-      dictionaries: [
-        colours
-      ],
-      length: 1
-    });
-    const uniqueName = uniqueNamesGenerator({
-      dictionaries: [
-        adjectives,
-        animals.concat( people_roles_and_objects )
-      ],
-      separator: ' ',
-      length: 2
-    });
-
-    this.connections[data.sessionId] = {
-      color: color,
-      name: uniqueName,
-      sessionId: data.sessionId,
-      socketIds: [ socket.id ],
-      vote: null,
-      voter: true
-    };
+		return;
   }
+
+	// Used to colour code the cards and names
+	const color = uniqueNamesGenerator({
+		dictionaries: [
+			colours
+		],
+		length: 1
+	});
+
+	const uniqueName = uniqueNamesGenerator({
+		dictionaries: [
+			adjectives,
+			animals.concat( people_roles_and_objects )
+		],
+		separator: ' ',
+		length: 2
+	});
+
+	this.connections[data.sessionId] = {
+		color: color,
+		name: uniqueName,
+		sessionId: data.sessionId,
+		socketIds: [ socket.id ],
+		vote: null,
+		voter: true
+	};
 }
 
 Room.prototype.leave = function(socket) {
@@ -201,17 +203,22 @@ Room.prototype.leave = function(socket) {
     if ( ! c ) {
       return false;
     }
+
     if (c.socketIds.length == 0) {
       return false;
     }
+
     return c.socketIds.includes( socket.id );
   });
+
   if (connection && connection.sessionId) {
     console.log( 'eliminating socket with ID: ' + socket.id, JSON.stringify( this.connections[connection.sessionId].socketIds ) );
     const index = this.connections[connection.sessionId].socketIds.indexOf(socket.id);
+
     if (index > -1) {
       this.connections[connection.sessionId].socketIds.splice(index, 1);
     }
+
     // clean up connections with no sockets
     if ( this.connections[connection.sessionId].socketIds.length < 1 ) {
       this.connections[connection.sessionId] = null;
@@ -235,6 +242,7 @@ Room.prototype.toggleVoter = function(data) {
     }
     // console.log("voter set to " + data.voter + " for " + data.sessionId);
   }
+
   this.io.sockets.in(this.id).emit('voter status changed');
 }
 
@@ -242,6 +250,7 @@ Room.prototype.recordVote = function(socket, data) {
   if (this.connections[data.sessionId]) {
     this.connections[data.sessionId]['vote'] = data.vote;
   }
+
   this.io.sockets.in(this.id).emit('voted');
   socket.emit('voted');
   // this.io.sockets.in(this.id).emit('voted');
@@ -251,6 +260,7 @@ Room.prototype.destroyVote = function(socket, data) {
   if (this.connections[data.sessionId]) {
     this.connections[data.sessionId]['vote'] = null;
   }
+
   socket.broadcast.to(this.id).emit('unvoted');
   // this.io.sockets.in(this.id).emit('unvoted');
 }
@@ -260,7 +270,8 @@ Room.prototype.resetVote = function() {
     if ( c ) {
       c.vote = null;
     }
-  })
+  });
+
   this.forcedReveal = false;
   this.io.sockets.in(this.id).emit('vote reset');
 }
@@ -275,6 +286,7 @@ Room.prototype.getClientCount = function() {
     if ( ! c ) {
       return false;
     }
+
     return (c.socketIds.length > 0);
   }).length;
 }
@@ -297,7 +309,6 @@ Room.prototype.json = function() {
   };
 }
 
-
 function calcTime(offset) {
   // create Date object for current location
   d = new Date();
@@ -314,6 +325,5 @@ function calcTime(offset) {
   // return time as a string
   return nd.toLocaleString();
 }
-
 
 exports.Room = Room;

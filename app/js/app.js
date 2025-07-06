@@ -3,7 +3,6 @@
 
 'use strict';
 
-
 // Declare app level module which depends on filters, and services
 angular.module('pokerApp', ['pokerApp.filters', 'pokerApp.services', 'pokerApp.directives', 'ngRoute']).
   config(['$routeProvider', '$locationProvider', function ($routeProvider, $locationProvider) {
@@ -11,6 +10,7 @@ angular.module('pokerApp', ['pokerApp.filters', 'pokerApp.services', 'pokerApp.d
       enabled: true,
       requireBase: false
     }).hashPrefix('!');
+
     $routeProvider.when('/', { templateUrl: '/partials/lobby.html', controller: LobbyCtrl});
     $routeProvider.when('/room/:roomId', { templateUrl: '/partials/room.html', controller: RoomCtrl});
     $routeProvider.otherwise({redirectTo: '/'});
@@ -31,10 +31,11 @@ function setCookie(name, value, daysToLive) {
   // Encode value in order to escape semicolons, commas, and whitespace
   var cookie = name + "=" + encodeURIComponent(value);
 
-  if(typeof daysToLive === "number") {
-    /* Sets the max-age attribute so that the cookie expires
-    after the specified number of days */
-    cookie += "; max-age=" + (daysToLive*24*60*60);
-    document.cookie = cookie;
-  }
+  if(typeof daysToLive !== "number") {
+		return;
+	}
+	/* Sets the max-age attribute so that the cookie expires
+	after the specified number of days */
+	cookie += "; max-age=" + (daysToLive*24*60*60);
+	document.cookie = cookie;
 }
