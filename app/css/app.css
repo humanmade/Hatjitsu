@@ -1,301 +1,303 @@
 body {
-  padding-left: 5px;
-  padding-right:5px;
+	padding-left: 5px;
+	padding-right: 5px;
 }
 
 .hm-logo {
-  margin-left: 0;
+	margin-left: 0;
 }
 
 .container {
-  max-width: 50rem;
+	max-width: 50rem;
 }
 
 /*
-  Cards
+Cards
 */
-
 .cards {
-  display: flex;
-  justify-content: space-around;
-  flex-flow: wrap;
+	display: flex;
+	flex-flow: wrap;
+	justify-content: space-around;
 }
 
 .card[hidden=""] {
-  display: none;
+	display: none;
 }
 
 .card[disabled] {
-  border-style: dashed;
-  opacity: 0.6;
+	border-style: dashed;
+	opacity: 0.6;
 }
 
 .card[disabled]:hover {
-  opacity: 1;
+	opacity: 1;
 }
 
 .card:hover .card--side-1 {
-  font-size:120%;
+	font-size: 120%;
 }
 
 .votePanel .cards {
-  justify-content: center;
-  min-height: 150px;
+	justify-content: center;
+	min-height: 150px;
 }
 
 .cards .card {
-  margin-bottom: 0.5em;
+	margin-bottom: 0.5em;
 }
 
 .card {
-  border-width:2px;
-  border-radius:10px;
-  position: relative;
-  display: inline-block;
-  min-width: 2.8em;
-  height: 4.5em;
-  font-size: 2em;
-  text-align: center;
-  line-height: 4.5em;
-  cursor: pointer;
-  overflow: hidden;
-  padding: 0 8px;
+	border-radius: 10px;
+	border-width: 2px;
+	cursor: pointer;
+	display: inline-block;
+	font-size: 2em;
+	height: 4.5em;
+	line-height: 4.5em;
+	min-width: 2.8em;
+	overflow: hidden;
+	padding: 0 8px;
+	position: relative;
+	text-align: center;
 }
 
 .card:hover {
-  background: #fafafa;
-  color: #D24632;
-  border-color: #D24632;
-  border-width: 2px;
-  border-top-width: 1px;
-  border-bottom-width: 3px;
-  rotate: 1deg;
+	background: #fafafa;
+	border-bottom-width: 3px;
+	border-color: #D24632;
+	border-top-width: 1px;
+	border-width: 2px;
+	color: #D24632;
+	rotate: 1deg;
 }
 
 .card .card--name {
-  display: block;
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  font-size: 12px;
-  max-height: 80px;
-  line-height: 15px;
-  font-weight: bold;
-  width: 100%;
-  text-align: center;
-  padding: 2px;
+	bottom: 0;
+	display: block;
+	font-size: 12px;
+	font-weight: bold;
+	left: 0;
+	line-height: 15px;
+	max-height: 80px;
+	padding: 2px;
+	position: absolute;
+	text-align: center;
+	width: 100%;
 }
 
 .card-panel {
-  min-width: 3.5em;
+	min-width: 3.5em;
 }
 
 .cardPanel .card {
-  min-width: 3em;
-  height: 5em;
-  line-height: 5em;
-  font-size: 2em;
+	font-size: 2em;
+	height: 5em;
+	line-height: 5em;
+	min-width: 3em;
 }
 
 .cardPanel .card.card--selected {
-  outline: 4px solid black;
-  font-weight: bold;
+	font-weight: bold;
+	outline: 4px solid black;
 }
 
 .card--2-sided {
-  display: inline-block;
+	display: inline-block;
 }
 
 .card--selected {
-  background-color: gold;
+	background-color: gold;
 }
+
 .card--selected:hover,
 .card--selected:focus {
-  background-color: gold;
+	background-color: gold;
 }
+
 .card--2-sided.card--selected {
-  background-color: transparent;
-  background-image: none;
+	background-color: transparent;
+	background-image: none;
 }
 
 .card--2-sided > .card--selected,
 .card--2-sided.card--selected {
-  background-color: gold;
+	background-color: gold;
 }
+
 .vote.card {
-  cursor: default;
-  font-weight: bold;
+	cursor: default;
+	font-weight: bold;
 }
 
 .vote.card--selected {
-  cursor: pointer;
+	cursor: pointer;
 }
 
 .flipped-stagger .card--side-1,
 .flipped-stagger .card--name {
-  display: none;
+	display: none;
 }
 
 /*
-
-  Dropdown
-
+Dropdown
 */
 .dropdown-wrapper {
-  position: relative;
+	position: relative;
 }
+
 .dropdown-wrapper .dropdown {
-  position: absolute;
-  display: none;
-  top: 110%;
-  left: 0;
-  min-width: 10em;
-  background: #fff;
-  pointer-events: none;
-  margin: 0;
-  margin-bottom: 1em;
-  border-radius: 4px;
-  border: 1px solid #737373;
-  padding: 0;
-  z-index: 3;
+	background: #fff;
+	border-radius: 4px;
+	border: 1px solid #737373;
+	display: none;
+	left: 0;
+	margin-bottom: 1em;
+	margin: 0;
+	min-width: 10em;
+	padding: 0;
+	pointer-events: none;
+	position: absolute;
+	top: 110%;
+	z-index: 3;
 }
+
 .dropdown-wrapper.dropdown-open .dropdown {
-  display: block;
-  pointer-events: auto;
+	display: block;
+	pointer-events: auto;
 }
 
 .dropdown li {
-  list-style-type: none;
+	list-style-type: none;
 }
+
 .dropdown .dropdown__item {
-  display: block;
-  text-decoration: none;
+	display: block;
+	text-decoration: none;
 }
 
 .dropdown .dropdown__item > a {
-  width: 100%;
-  display: inline-block;
-  padding: 10px 20px;
-  text-decoration: none;
-  border-bottom:0;
+	border-bottom: 0;
+	display: inline-block;
+	padding: 10px 20px;
+	text-decoration: none;
+	width: 100%;
 }
 
 .dropdown .dropdown__item > a:hover {
-  color: white;
-  background: #D24632;
+	color: white;
+	background: #D24632;
 }
 
 /*
-  Alerts
+Alerts
 */
 .alert {
-  z-index: 3;
-  bottom: 0;
-  left: 0;
-  max-width: 300px;
-  position: fixed;
-  display: flex;
-  flex-direction: column-reverse;
+	bottom: 0;
+	display: flex;
+	flex-direction: column-reverse;
+	left: 0;
+	max-width: 300px;
+	position: fixed;
+	z-index: 3;
 }
 
 .notification {
-  padding: 0 2em 0 0.5em;
-  line-height: 1.5em;
-  margin: 0.25em;
-  padding: 0.5em 1em;
-  max-width: 100%;
-  border-radius: 4px;
-  font-size: 0.9em;
-  background-color: black;
-  color: #fff;
+	padding: 0 2em 0 0.5em;
+	line-height: 1.5em;
+	margin: 0.25em;
+	padding: 0.5em 1em;
+	max-width: 100%;
+	border-radius: 4px;
+	font-size: 0.9em;
+	background-color: black;
+	color: #fff;
 }
 
 .notification:empty {
-  display: none;
+	display: none;
 }
 
 .notification.appError {
-  background-color: #f14668;
+	background-color: #f14668;
 }
+
 /*
-
-  Surgical classes
-
+	Surgical classes
 */
 .no-js-hide {
-  display: none;
+	display: none;
 }
 
 .pullright {
-  float: right;
+	float: right;
 }
 
 .header {
-  border-bottom: 1px solid #d9d9d9;
-  margin: 1.66667rem 0;
+	border-bottom: 1px solid #d9d9d9;
+	margin: 1.66667rem 0;
 }
 
 .header a {
-  border-bottom: none;
+	border-bottom: none;
 }
 
 .header .header__text, .header .hm-logo {
-  font-size: 1.8rem;
-  margin-top: 0;
-  margin-bottom: 0.5em;
+	font-size: 1.8rem;
+	margin-top: 0;
+	margin-bottom: 0.5em;
 }
 
 @media screen and (max-width: 30rem) {
-  .header {
-    margin: 0.25rem 0;
-  }
+	.header {
+		margin: 0.25rem 0;
+	}
 
-  .header .header__text {
-    font-size: 1.8rem;
-    line-height: 3.3325rem;
-  }
+	.header .header__text {
+		font-size: 1.8rem;
+		line-height: 3.3325rem;
+	}
 }
 
-
 @media screen and (max-width: 25rem) {
-  .header .header__text {
-    font-size: 1.6rem;
-    line-height: 3.3325rem;
-  }
+	.header .header__text {
+		font-size: 1.6rem;
+		line-height: 3.3325rem;
+	}
 }
 
 .switch {
-  margin: 1.66667rem 0;
+	margin: 1.66667rem 0;
 }
 
 .switch > div {
-  display: inline-block;
+	display: inline-block;
 }
 
 .header > a {
-  text-decoration: none;
-  border-bottom: none;
+	text-decoration: none;
+	border-bottom: none;
 }
+
 .header > .hm-logo {
-  display: inline-block;
-  height: 3.3325rem;
+	display: inline-block;
+	height: 3.3325rem;
 }
 
 h1.header__text {
-  display: inline-block;
+	display: inline-block;
 }
 
 .admin-indicator {
-  vertical-align: text-bottom;
-  color: darkgoldenrod;
-  line-height: 1.555rem;
-  font-size: 1rem;
-  display: inline-block;
+	color: darkgoldenrod;
+	display: inline-block;
+	font-size: 1rem;
+	line-height: 1.555rem;
+	vertical-align: text-bottom;
 }
 
 .post-vote-controls {
-  display: flex;
-  justify-content: center;
-  flex-direction: row;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
 }
 
