@@ -20,3 +20,13 @@ npm start
 ```
 
 [http://localhost:5099](http://localhost:5099)
+
+## Deployment
+
+To update planning poker:
+
+ - clone the repository using the heroku cli tool
+ - add this repo as a `github` remote
+ - checkout the github master branch
+ - pull down changes, then switch to heroku `main` branch
+ - merge `master` into `main` and push. You should see build progress in the `git push` output.
