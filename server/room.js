@@ -151,6 +151,7 @@ const people_roles_and_objects = [
  */
 const forbidden = [
 	'attractive',
+	'available',
 	'christian',
 	'chubby',
 	'creepy',
