@@ -146,6 +146,43 @@ const people_roles_and_objects = [
   'zod'
 ];
 
+/**
+ * Words that could lead to unfortunate or offensive combinations.
+ */
+const forbidden = [
+	'attractive',
+	'christian',
+	'chubby',
+	'creepy',
+	'desirable',
+	'dirty',
+	'ethnic',
+	'explicit',
+	'fat',
+	'filfthy',
+	'gay',
+	'gorgeous',
+	'hard',
+	'hot',
+	'married',
+	'moaning',
+	'naughty',
+	'oral',
+	'protestant',
+	'racial',
+	'rude',
+	'sexual',
+	'straight',
+	'yeasty',
+	'beaver',
+	'booby',
+	'cow',
+	'dog',
+	'kite',
+	'rat',
+	'snake',
+	'thrush'
+];
 var Room = function(io, id ) {
   this.io = io;
   this.id = id;
@@ -181,8 +218,8 @@ Room.prototype.enter = function(socket, data) {
 
 	const uniqueName = uniqueNamesGenerator({
 		dictionaries: [
-			adjectives,
-			animals.concat( people_roles_and_objects )
+			adjectives.filter( word => !forbidden.includes( word ) ),
+			animals.concat( people_roles_and_objects ).filter( word => !forbidden.includes( word ) )
 		],
 		separator: ' ',
 		length: 2
