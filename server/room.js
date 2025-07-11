@@ -161,6 +161,7 @@ const forbidden = [
 	'explicit',
 	'fat',
 	'filfthy',
+	'filthy',
 	'gay',
 	'gorgeous',
 	'hard',
