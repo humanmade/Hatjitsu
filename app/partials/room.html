@@ -13,22 +13,22 @@
         Reveal
       </button>
 
-			<div ng-show="showAdmin" id="dd" class="{{dropdownClass}} dropdown-wrapper btn btn--tertiary btn--small" ng-click="openDropdown()">
+      <div ng-show="showAdmin" id="dd" class="{{dropdownClass}} dropdown-wrapper btn btn--tertiary btn--small" ng-click="openDropdown()">
         <span>{{cardPack}} pack</span> <i class="icon icon--arrow-down icon--default" title="icon icon--arrow-down icon--default">arrow-down</i>
-				<ul class="dropdown">
-					<li class="dropdown__item" ng-repeat="(deck, cards) in decks">
-						<a
-							href="#"
-							ng-model="cardPack"
-							ng-click="setCardPack(deck)"
-							id="deck{{deck}}"
-						>
-							<span class="dropdown__item--selected" ng-show="deck === cardPack">&#10003;</span>
-							{{deck}}<br>
-							<small>{{cards.join(', ')}}</small>
-						</a>
-					</li>
-				</ul>
+        <ul class="dropdown">
+          <li class="dropdown__item" ng-repeat="(deck, cards) in decks">
+            <a
+              href="#"
+              ng-model="cardPack"
+              ng-click="setCardPack(deck)"
+              id="deck{{deck}}"
+            >
+              <span class="dropdown__item--selected" ng-show="deck === cardPack">&#10003;</span>
+              {{deck}}<br>
+              <small>{{cards.join(', ')}}</small>
+            </a>
+          </li>
+        </ul>
       </div>
       <strong ng-show="showAdmin" class="admin-indicator" ng-switch on="showAdmin">⚡️ Room Admin</strong>
 

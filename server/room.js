@@ -150,40 +150,39 @@ const people_roles_and_objects = [
  * Words that could lead to unfortunate or offensive combinations.
  */
 const forbidden = [
-	'attractive',
-	'available',
-	'christian',
-	'chubby',
-	'creepy',
-	'desirable',
-	'dirty',
-	'ethnic',
-	'explicit',
-	'fat',
-	'filfthy',
-	'filthy',
-	'gay',
-	'gorgeous',
-	'hard',
-	'hot',
-	'married',
-	'moaning',
-	'naughty',
-	'oral',
-	'protestant',
-	'racial',
-	'rude',
-	'sexual',
-	'straight',
-	'yeasty',
-	'beaver',
-	'booby',
-	'cow',
-	'dog',
-	'kite',
-	'rat',
-	'snake',
-	'thrush'
+  'attractive',
+  'available',
+  'christian',
+  'chubby',
+  'creepy',
+  'desirable',
+  'dirty',
+  'ethnic',
+  'explicit',
+  'fat',
+  'filthy',
+  'gay',
+  'gorgeous',
+  'hard',
+  'hot',
+  'married',
+  'moaning',
+  'naughty',
+  'oral',
+  'protestant',
+  'racial',
+  'rude',
+  'sexual',
+  'straight',
+  'yeasty',
+  'beaver',
+  'booby',
+  'cow',
+  'dog',
+  'kite',
+  'rat',
+  'snake',
+  'thrush'
 ];
 var Room = function(io, id ) {
   this.io = io;
@@ -207,34 +206,34 @@ Room.prototype.enter = function(socket, data) {
   // console.log("room entered as " + socket.id);
   if (this.connections[data.sessionId]) {
     this.connections[data.sessionId].socketIds.push( socket.id );
-		return;
+    return;
   }
 
-	// Used to colour code the cards and names
-	const color = uniqueNamesGenerator({
-		dictionaries: [
-			colours
-		],
-		length: 1
-	});
+  // Used to colour code the cards and names
+  const color = uniqueNamesGenerator({
+    dictionaries: [
+      colours
+    ],
+    length: 1
+  });
 
-	const uniqueName = uniqueNamesGenerator({
-		dictionaries: [
-			adjectives.filter( word => !forbidden.includes( word ) ),
-			animals.concat( people_roles_and_objects ).filter( word => !forbidden.includes( word ) )
-		],
-		separator: ' ',
-		length: 2
-	});
+  const uniqueName = uniqueNamesGenerator({
+    dictionaries: [
+      adjectives.filter( word => !forbidden.includes( word ) ),
+      animals.concat( people_roles_and_objects ).filter( word => !forbidden.includes( word ) )
+    ],
+    separator: ' ',
+    length: 2
+  });
 
-	this.connections[data.sessionId] = {
-		color: color,
-		name: uniqueName,
-		sessionId: data.sessionId,
-		socketIds: [ socket.id ],
-		vote: null,
-		voter: true
-	};
+  this.connections[data.sessionId] = {
+    color: color,
+    name: uniqueName,
+    sessionId: data.sessionId,
+    socketIds: [ socket.id ],
+    vote: null,
+    voter: true
+  };
 }
 
 Room.prototype.leave = function(socket) {
