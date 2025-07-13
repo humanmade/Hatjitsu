@@ -171,7 +171,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
 		if (Notification.permission === "granted") {
 			const notification = new Notification("Voting Complete", {
 				body: "All users have voted. Check the tab to view the results.",
-				icon: "https://planningpoker.hmn.md/img/og-image.png" // Set the notification icon
+				icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png" // Set the notification icon
 			});
 
 			// Add an onclick handler to focus the tab when the notification is clicked
@@ -185,7 +185,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
 				}
 				const notification = new Notification("Voting Complete", {
 					body: "All users have voted. Check the tab to view the results.",
-					icon: "https://planningpoker.hmn.md/img/og-image.png" // Set the notification icon
+					icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png" // Set the notification icon
 				});
 
 				// Add an onclick handler to focus the tab when the notification is clicked
