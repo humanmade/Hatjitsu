@@ -301,3 +301,6 @@ h1.header__text {
 	justify-content: center;
 }
 
+.bg:not(.body--unanimous) .fireworks {
+	display: none;
+}

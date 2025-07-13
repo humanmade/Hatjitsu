@@ -16,8 +16,8 @@ function MainCtrl($scope, $timeout) {
   });
 
   $scope.$on('unanimous vote', function () {
-    $scope.logoState = ' header__logo--green';
-    $scope.bodyState = ' body--green';
+    $scope.logoState = ' header__logo--unanimous';
+    $scope.bodyState = ' body--unanimous';
   });
 
   $scope.$on('not unanimous vote', function () {
@@ -149,46 +149,51 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
       return v.vote !== undefined && v.vote !== null;
     });
 
-    if (allVotesCast || $scope.forcedReveal) {
-			var vote = 'not unanimous vote';
-      var uniqVotes = _.chain($scope.votes).pluck('vote').uniq().value().length;
-      if (uniqVotes === 1) {
-        vote = 'unanimous vote';
-      } else if (uniqVotes === $scope.voterCount) {
-        vote = 'problem vote';
-      } else if ($scope.voterCount > 3 && uniqVotes === ($scope.voterCount - 1)) {
-        vote = 'problem vote';
-      }
-			$scope.$emit(vote);
+    if ( !(allVotesCast || $scope.forcedReveal)) {
+			$scope.$emit('unfinished vote');
+			return;
+		}
 
-      if (document.hidden) { // Only trigger notification if the tab is not active
-        if (Notification.permission === "granted") {
-          const notification = new Notification("Voting Complete", {
-            body: "All users have voted. Check the tab to view the results.",
-          });
+		var vote = 'not unanimous vote';
+		var uniqVotes = _.chain($scope.votes).pluck('vote').uniq().value().length;
+		if (uniqVotes === 1) {
+			vote = 'unanimous vote';
+		} else if (uniqVotes === $scope.voterCount) {
+			vote = 'problem vote';
+		} else if ($scope.voterCount > 3 && uniqVotes === ($scope.voterCount - 1)) {
+			vote = 'problem vote';
+		}
+		$scope.$emit(vote);
 
-          // Add an onclick handler to focus the tab when the notification is clicked
-          notification.onclick = function () {
-            window.focus();
-          };
-        } else if (Notification.permission === "default") {
-          Notification.requestPermission().then(function (permission) {
-            if (permission === "granted") {
-              const notification = new Notification("Voting Complete", {
-                body: "All users have voted. Check the tab to view the results.",
-              });
+		if (! document.hidden) { // Only trigger notification if the tab is not active
+			return;
+		}
+		if (Notification.permission === "granted") {
+			const notification = new Notification("Voting Complete", {
+				body: "All users have voted. Check the tab to view the results.",
+				icon: "https://planningpoker.hmn.md/img/og-image.png" // Set the notification icon
+			});
 
-              // Add an onclick handler to focus the tab when the notification is clicked
-              notification.onclick = function () {
-                window.focus();
-              };
-            }
-          });
-        }
-      }
-    } else {
-      $scope.$emit('unfinished vote');
-    }
+			// Add an onclick handler to focus the tab when the notification is clicked
+			notification.onclick = function () {
+				window.focus();
+			};
+		} else if (Notification.permission === "default") {
+			Notification.requestPermission().then(function (permission) {
+				if (permission !== "granted") {
+					return;
+				}
+				const notification = new Notification("Voting Complete", {
+					body: "All users have voted. Check the tab to view the results.",
+					icon: "https://planningpoker.hmn.md/img/og-image.png" // Set the notification icon
+				});
+
+				// Add an onclick handler to focus the tab when the notification is clicked
+				notification.onclick = function () {
+					window.focus();
+				};
+			});
+		}
   };
 
   var myConnectionHash = function () {
