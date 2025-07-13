@@ -149,10 +149,6 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
       return v.vote !== undefined && v.vote !== null;
     });
 
-    if ($scope.debugMode) {
-      console.log({ voterCount: $scope.voterCount, votes: $scope.votes, allVotesCast: allVotesCast });
-    }
-
     if (allVotesCast || $scope.forcedReveal) {
 			var vote = 'not unanimous vote';
       var uniqVotes = _.chain($scope.votes).pluck('vote').uniq().value().length;
