@@ -16,8 +16,8 @@ function MainCtrl($scope, $timeout) {
   });
 
   $scope.$on('unanimous vote', function () {
-    $scope.logoState = ' header__logo--green';
-    $scope.bodyState = ' body--green';
+    $scope.logoState = ' header__logo--unanimous';
+    $scope.bodyState = ' body--unanimous';
   });
 
   $scope.$on('not unanimous vote', function () {
@@ -117,43 +117,83 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     return a + b;
   };
 
-  // wipe out vote if voting state is not yet finished to prevent cheating.
-  // if it has already been set - use the actual vote. This works for unvoting - so that
-  // before the flip occurs - we don't display 'oi'
   var processVotes = function () {
-
     var voteCount = $scope.votes.length;
     _.each($scope.votes, function (v) {
       v.visibleVote = v.visibleVote === undefined && (!$scope.forcedReveal && voteCount < $scope.voterCount) ? 'X' : v.vote;
     });
 
     var voteArr = [];
-    voteArr.length = $scope.voterCount - voteCount;
+    voteArr.length = Math.max(0, $scope.voterCount - voteCount);
     $scope.placeholderVotes = voteArr;
     $scope.showAverage = voteArr.length === 0;
 
+    var validVotes = _.filter(_.pluck($scope.votes, 'vote'), function (vote) {
+      return !isNaN(parseFloat(vote));
+    });
 
-    var total =  _.reduce(_.map(_.pluck($scope.votes, 'vote'), parseFloat), sumOfTwo, 0);
-    $scope.votingAverage = Math.round(total / $scope.votes.length);
-    $scope.votingTotal = total;
-    $scope.votingStandardDeviation = standardDeviation(_.pluck($scope.votes, 'vote'), parseFloat);
-
-    $scope.forceRevealDisable = (!$scope.forcedReveal && ($scope.votes.length < $scope.voterCount || $scope.voterCount === 0)) ? false : true;
-
-    if ($scope.votes.length === $scope.voterCount || $scope.forcedReveal) {
-      var uniqVotes = _.chain($scope.votes).pluck('vote').uniq().value().length;
-      if (uniqVotes === 1) {
-        $scope.$emit('unanimous vote');
-      } else if (uniqVotes === $scope.voterCount) {
-        $scope.$emit('problem vote');
-      } else if ($scope.voterCount > 3 && uniqVotes === ($scope.voterCount - 1)) {
-        $scope.$emit('problem vote');
-      } else {
-        $scope.$emit('not unanimous vote');
-      }
+    if (validVotes.length > 0) {
+      var total = _.reduce(_.map(validVotes, parseFloat), sumOfTwo, 0);
+      $scope.votingAverage = Math.round(total / validVotes.length);
+      $scope.votingTotal = total;
+      $scope.votingStandardDeviation = standardDeviation(validVotes);
     } else {
-      $scope.$emit('unfinished vote');
+      $scope.votingAverage = 0;
+      $scope.votingTotal = 0;
+      $scope.votingStandardDeviation = 0;
     }
+
+    $scope.forceRevealDisable = ($scope.forcedReveal || ($scope.votes.length === $scope.voterCount && $scope.voterCount > 0));
+
+    var allVotesCast = $scope.voterCount > 0 && $scope.votes.length === $scope.voterCount && _.every($scope.votes, function (v) {
+      return v.vote !== undefined && v.vote !== null;
+    });
+
+    if ( !(allVotesCast || $scope.forcedReveal)) {
+			$scope.$emit('unfinished vote');
+			return;
+		}
+
+		var vote = 'not unanimous vote';
+		var uniqVotes = _.chain($scope.votes).pluck('vote').uniq().value().length;
+		if (uniqVotes === 1) {
+			vote = 'unanimous vote';
+		} else if (uniqVotes === $scope.voterCount) {
+			vote = 'problem vote';
+		} else if ($scope.voterCount > 3 && uniqVotes === ($scope.voterCount - 1)) {
+			vote = 'problem vote';
+		}
+		$scope.$emit(vote);
+
+		if (! document.hidden) { // Only trigger notification if the tab is not active
+			return;
+		}
+		if (Notification.permission === "granted") {
+			const notification = new Notification("Voting Complete", {
+				body: "All users have voted. Check the tab to view the results.",
+				icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png" // Set the notification icon
+			});
+
+			// Add an onclick handler to focus the tab when the notification is clicked
+			notification.onclick = function () {
+				window.focus();
+			};
+		} else if (Notification.permission === "default") {
+			Notification.requestPermission().then(function (permission) {
+				if (permission !== "granted") {
+					return;
+				}
+				const notification = new Notification("Voting Complete", {
+					body: "All users have voted. Check the tab to view the results.",
+					icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png" // Set the notification icon
+				});
+
+				// Add an onclick handler to focus the tab when the notification is clicked
+				notification.onclick = function () {
+					window.focus();
+				};
+			});
+		}
   };
 
   var myConnectionHash = function () {
