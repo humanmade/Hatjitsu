@@ -29,11 +29,11 @@ Lobby.prototype.createRoom = function(id) {
 
 Lobby.prototype.createUniqueURL = function() {
   var text = '',
-		possible = '0123456789',
-		i;
+    possible = '0123456789',
+    i;
   for ( i = 0; i < 5; i++ ) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
+  }
   return text;
 };
 

@@ -32,10 +32,10 @@ function setCookie(name, value, daysToLive) {
   var cookie = name + "=" + encodeURIComponent(value);
 
   if(typeof daysToLive !== "number") {
-		return;
-	}
-	/* Sets the max-age attribute so that the cookie expires
-	after the specified number of days */
-	cookie += "; max-age=" + (daysToLive*24*60*60);
-	document.cookie = cookie;
+    return;
+  }
+  /* Sets the max-age attribute so that the cookie expires
+  after the specified number of days */
+  cookie += "; max-age=" + (daysToLive*24*60*60);
+  document.cookie = cookie;
 }
