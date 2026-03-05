@@ -218,6 +218,9 @@ Room.prototype.enter = function(socket, data) {
   // console.log("room entered as " + socket.id);
   if (this.connections[data.sessionId]) {
     this.connections[data.sessionId].socketIds.push( socket.id );
+    if (data.name) {
+      this.connections[data.sessionId].name = data.name;
+    }
     return;
   }
 
@@ -240,7 +243,7 @@ Room.prototype.enter = function(socket, data) {
 
   this.connections[data.sessionId] = {
     color: color,
-    name: uniqueName,
+    name: data.name || uniqueName,
     sessionId: data.sessionId,
     socketIds: [ socket.id ],
     vote: null,
@@ -301,6 +304,14 @@ Room.prototype.findSessionBySocket = function(socketId) {
   });
 };
 
+Room.prototype.setName = function(socket, name) {
+  var connection = this.findSessionBySocket(socket.id);
+  if (connection) {
+    connection.name = name;
+    this.io.sockets.in(this.id).emit('name changed', this.json());
+  }
+};
+
 Room.prototype.recordVote = function(socket, data) {
   var connection = this.findSessionBySocket(socket.id);
   if (connection) {
@@ -352,6 +363,7 @@ Room.prototype.json = function() {
     createdAt: this.createdAt,
     createAdmin: this.createAdmin,
     hasAdmin: this.hasAdmin,
+    adminSessionId: this.adminSessionId,
     cardPack: this.cardPack,
     forcedReveal: this.forcedReveal,
     connections: _.filter(

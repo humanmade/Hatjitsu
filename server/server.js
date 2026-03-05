@@ -165,16 +165,29 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  socket.on('set name', function (data, callback) {
+    statsSocketMessagesReceived++;
+    var room = lobby.getRoom(data.id);
+    if (!room.error) {
+      room.setName(socket, data.name);
+    }
+    callback({});
+  });
+
   socket.on('toggle voter', function (data, callback) {
     statsSocketMessagesReceived++;
     var room = lobby.getRoom(data.id);
     if (room.error) {
       callback( { error: room.error });
-    } else if (!room.isAdmin(socket.id)) {
-      callback( { error: 'Only the room admin can toggle voter status' });
     } else {
-      room.toggleVoter(data);
-      callback( {} );
+      var connection = room.findSessionBySocket(socket.id);
+      var isSelf = connection && connection.sessionId === data.sessionId;
+      if (!isSelf && !room.isAdmin(socket.id)) {
+        callback( { error: 'Only the room admin can toggle voter status' });
+      } else {
+        room.toggleVoter(data);
+        callback( {} );
+      }
     }
   });
 

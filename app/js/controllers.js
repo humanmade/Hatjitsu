@@ -265,13 +265,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
   var refreshRoomInfo = function (roomObj) {
     console.log("refreshRoomInfo: roomObj:", roomObj);
 
-    if (roomObj.createAdmin) {
-      setCookie('admin-' + roomObj.id, true, 0.5 );
-    }
-
-    if (getCookie('admin-' + roomObj.id ) ) {
-      $scope.showAdmin = true;
-    }
+    $scope.showAdmin = (roomObj.adminSessionId === $scope.sessionId);
 
     $scope.connections = roomObj.connections;
     $scope.humanCount = $scope.connections.length;
@@ -313,6 +307,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
   $scope.joinAsVoter = function () {
     $scope.initialVoterChoice = true;
     $scope.showRolePrompt = false;
+    setCookie('joined-' + $scope.roomId, true, 0.5);
     $scope.configureRoom();
   };
 
@@ -320,6 +315,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     $scope.initialVoterChoice = false;
     $scope.voter = false;
     $scope.showRolePrompt = false;
+    setCookie('joined-' + $scope.roomId, true, 0.5);
     $scope.configureRoom();
   };
 
@@ -330,7 +326,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
 
     // Only register socket listeners once
     if ($scope._listenersRegistered) {
-      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
+      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice, name: $scope.customName }, function (response) {
         processMessage(response, refreshRoomInfo);
       });
       return;
@@ -370,6 +366,10 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
       refreshRoomInfo(roomState);
     });
 
+    socket.on('name changed', function (roomState) {
+      refreshRoomInfo(roomState);
+    });
+
     socket.on('connect', function () {
       // console.log("on connect");
       var sessionId = this.id;
@@ -381,7 +381,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
 
       // console.log("session id = " + $scope.sessionId);
       // console.log("emit join room", { id: $scope.roomId, sessionId: $scope.sessionId });
-      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
+      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice, name: $scope.customName }, function (response) {
         processMessage(response, refreshRoomInfo);
       });
     });
@@ -391,7 +391,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
 
     // Only emit join if already connected (the connect handler emits it otherwise)
     if (socket.connected) {
-      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
+      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice, name: $scope.customName }, function (response) {
         processMessage(response, refreshRoomInfo);
       });
     }
@@ -471,6 +471,31 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     });
   };
 
+  $scope.startEditName = function () {
+    $scope.nameEdit.active = true;
+    $scope.nameEdit.value = $scope.myName;
+  };
+
+  $scope.saveName = function () {
+    $scope.nameEdit.active = false;
+    var name = ($scope.nameEdit.value || '').trim();
+    if (name && name !== $scope.myName) {
+      $scope.myName = name;
+      $scope.customName = name;
+      setCookie('userName', name, 365);
+      socket.emit('set name', { id: $scope.roomId, name: name }, function (response) {
+        processMessage(response);
+      });
+    }
+  };
+
+  $scope.nameEditKeydown = function (event) {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      $scope.saveName();
+    }
+  };
+
   $scope.toggleVoter = function () {
     // console.log("emit toggle voter", { id: $scope.roomId, voter: $scope.voter, sessionId: $scope.sessionId });
     socket.emit('toggle voter', { id: $scope.roomId, voter: $scope.voter, sessionId: $scope.sessionId }, function (response) {
@@ -521,8 +546,10 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
   $scope.forceRevealDisable = true;
   $scope.votingAverage = 0;
   $scope.votingTotal = 0;
-  $scope.showRolePrompt = !getCookie('sessionId');
+  $scope.showRolePrompt = !getCookie('joined-' + $routeParams.roomId);
   $scope.initialVoterChoice = true;
+  $scope.customName = getCookie('userName') || '';
+  $scope.nameEdit = { active: false, value: '' };
 }
 
 RoomCtrl.$inject = ['$scope', '$routeParams', '$timeout', 'socket'];

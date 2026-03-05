@@ -358,6 +358,31 @@ h1.header__text {
 	opacity: 1;
 }
 
+.editable-name {
+	cursor: pointer;
+}
+
+.edit-pencil {
+	font-size: 0.85em;
+	font-weight: bold;
+	opacity: 0.5;
+}
+
+.editable-name:hover .edit-pencil {
+	opacity: 0.8;
+}
+
+.name-edit-input {
+	border: none;
+	border-bottom: 2px solid currentColor;
+	background: transparent;
+	font: inherit;
+	font-weight: bold;
+	outline: none;
+	width: 12em;
+}
+
+
 .bg:not(.body--unanimous) .fireworks {
 	display: none;
 }

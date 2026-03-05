@@ -90,11 +90,14 @@
     <div class="cardPanel-meta">
       <div ng-show="voter">
         <div ng-switch on="voted">
-          <p ng-switch-when="false">Hello <strong style="color: {{myColor}}">{{myName}}</strong>, please choose your estimate...</p>
-          <p ng-switch-when="true">Hello <strong style="color: {{myColor}}">{{myName}}</strong>.</p>
+          <p ng-switch-when="false">Hello
+            <strong style="color: {{myColor}}" ng-hide="nameEdit.active" ng-click="startEditName()" class="editable-name" title="Click to change your name"><span class="edit-pencil">&#9998;</span> {{myName}}</strong><input ng-show="nameEdit.active" ng-model="nameEdit.value" class="name-edit-input" style="color: {{myColor}}" ng-blur="saveName()" ng-keydown="nameEditKeydown($event)" maxlength="30">, please choose your estimate...</p>
+          <p ng-switch-when="true">Hello
+            <strong style="color: {{myColor}}" ng-hide="nameEdit.active" ng-click="startEditName()" class="editable-name" title="Click to change your name"><span class="edit-pencil">&#9998;</span> {{myName}}</strong><input ng-show="nameEdit.active" ng-model="nameEdit.value" class="name-edit-input" style="color: {{myColor}}" ng-blur="saveName()" ng-keydown="nameEditKeydown($event)" maxlength="30">.</p>
         </div>
       </div>
-      <p ng-hide="voter">Hello <strong>spectator <span style="color: {{myColor}}">{{myName}}</span></strong>, you have chosen not to vote.</p>
+      <p ng-hide="voter">Hello <strong>spectator
+        <span style="color: {{myColor}}" ng-hide="nameEdit.active" ng-click="startEditName()" class="editable-name" title="Click to change your name"><span class="edit-pencil">&#9998;</span> {{myName}}</span><input ng-show="nameEdit.active" ng-model="nameEdit.value" class="name-edit-input" style="color: {{myColor}}" ng-blur="saveName()" ng-keydown="nameEditKeydown($event)" maxlength="30"></strong>, you have chosen not to vote.</p>
     </div>
 
     <div ng-switch on="showCustom">
