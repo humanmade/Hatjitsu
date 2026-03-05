@@ -219,7 +219,7 @@ Room.prototype.enter = function(socket, data) {
   if (this.connections[data.sessionId]) {
     this.connections[data.sessionId].socketIds.push( socket.id );
     if (data.name) {
-      this.connections[data.sessionId].name = data.name;
+      this.connections[data.sessionId].name = this.uniquifyName(data.name, data.sessionId);
     }
     return;
   }
@@ -241,9 +241,11 @@ Room.prototype.enter = function(socket, data) {
     length: 2
   });
 
+  var name = this.uniquifyName(data.name || uniqueName, data.sessionId);
+
   this.connections[data.sessionId] = {
     color: color,
-    name: data.name || uniqueName,
+    name: name,
     sessionId: data.sessionId,
     socketIds: [ socket.id ],
     vote: null,
@@ -323,12 +325,37 @@ Room.prototype.findSessionBySocket = function(socketId) {
   });
 };
 
+Room.prototype.uniquifyName = function(name, excludeSessionId) {
+  var self = this;
+  var isNameTaken = function(candidate) {
+    var lower = candidate.toLowerCase();
+    return _.some(self.connections, function(c) {
+      return c && c.socketIds.length > 0 && c.sessionId !== excludeSessionId && c.name.toLowerCase() === lower;
+    });
+  };
+  if (!isNameTaken(name)) {
+    return name;
+  }
+  // Prepend a random adjective to make the name unique
+  var filteredAdjectives = adjectives.filter(function(w) { return !forbidden.includes(w); });
+  for (var i = 0; i < 10; i++) {
+    var adj = uniqueNamesGenerator({ dictionaries: [filteredAdjectives], length: 1 });
+    var candidate = adj + ' ' + name;
+    if (!isNameTaken(candidate)) {
+      return candidate;
+    }
+  }
+  return name;
+};
+
 Room.prototype.setName = function(socket, name) {
   var connection = this.findSessionBySocket(socket.id);
-  if (connection) {
-    connection.name = name;
-    this.io.sockets.in(this.id).emit('name changed', this.json());
+  if (!connection) {
+    return { error: 'Connection not found' };
   }
+  connection.name = this.uniquifyName(name, connection.sessionId);
+  this.io.sockets.in(this.id).emit('name changed', this.json());
+  return {};
 };
 
 Room.prototype.recordVote = function(socket, data) {

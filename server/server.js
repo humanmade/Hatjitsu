@@ -168,10 +168,12 @@ io.sockets.on('connection', function (socket) {
   socket.on('set name', function (data, callback) {
     statsSocketMessagesReceived++;
     var room = lobby.getRoom(data.id);
-    if (!room.error) {
-      room.setName(socket, data.name);
+    if (room.error) {
+      callback({ error: room.error });
+    } else {
+      var result = room.setName(socket, data.name);
+      callback(result);
     }
-    callback({});
   });
 
   socket.on('toggle voter', function (data, callback) {
