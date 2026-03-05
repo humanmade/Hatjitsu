@@ -46,14 +46,15 @@
             <span class="notification__icon">&#9888;</span>
             <span ng-bind="socketMessage"></span>
           </div>
-          <div class="appError notification" ng-show="errorMessage" ng-class="{'notification--visible': errorVisible, 'notification--dismissing': errorDismissing}">
-            <span class="notification__icon">&#9888;</span>
-            <span ng-bind="errorMessage"></span>
-          </div>
-          <div class="message notification" ng-show="message" ng-class="{'notification--visible': messageVisible, 'notification--dismissing': messageDismissing}">
-            <span class="notification__icon">&#9432;</span>
-            <span>{{message}}</span>
-            <button class="notification__dismiss" ng-click="dismissMessage()">&times;</button>
+          <div
+            ng-repeat="toast in toasts track by toast.id"
+            class="notification"
+            ng-class="{'notification--visible': toast.visible, 'notification--dismissing': toast.dismissing, 'appError': toast.type === 'error'}"
+          >
+            <span class="notification__icon" ng-if="toast.type === 'error'">&#9888;</span>
+            <span class="notification__icon" ng-if="toast.type !== 'error'">&#9432;</span>
+            <span>{{toast.message}}</span>
+            <button class="notification__dismiss" ng-click="dismissToast(toast)">&times;</button>
           </div>
         </div>
 

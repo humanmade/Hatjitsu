@@ -6,8 +6,7 @@
 /* Controllers */
 function MainCtrl($scope, $timeout) {
   $scope.logoState = '';
-  $scope.errorMessage = null;
-  $scope.message = null;
+  $scope.toasts = [];
   $scope.decks = {
     '135 set': [ '1', '3', '5', '8', '13', '21', '?'],
     'Fibonacci': ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?'],
@@ -46,39 +45,39 @@ function MainCtrl($scope, $timeout) {
     $scope.bodyState = '';
   });
 
-  $scope.$on('show message', function (evnt, msg) {
-    $scope.message = msg;
-    $scope.messageDismissing = false;
-    $timeout(function () { $scope.messageVisible = true; }, 0);
-    $timeout.cancel($scope._messageTimer);
-    $scope._messageTimer = $timeout(function () {
-      $scope.dismissMessage();
+  var toastId = 0;
+
+  function addToast(type, msg) {
+    var toast = { id: toastId++, type: type, message: msg, visible: false, dismissing: false };
+    $scope.toasts.push(toast);
+    $timeout(function () { toast.visible = true; }, 0);
+    toast._timer = $timeout(function () {
+      dismissToast(toast);
     }, 4000);
+  }
+
+  function dismissToast(toast) {
+    toast.dismissing = true;
+    toast.visible = false;
+    $timeout.cancel(toast._timer);
+    $timeout(function () {
+      var idx = $scope.toasts.indexOf(toast);
+      if (idx > -1) {
+        $scope.toasts.splice(idx, 1);
+      }
+    }, 200);
+  }
+
+  $scope.$on('show message', function (evnt, msg) {
+    addToast('message', msg);
   });
 
-  $scope.dismissMessage = function () {
-    $scope.messageDismissing = true;
-    $scope.messageVisible = false;
-    $timeout.cancel($scope._messageTimer);
-    $timeout(function () {
-      $scope.message = null;
-      $scope.messageDismissing = false;
-    }, 200);
+  $scope.dismissToast = function (toast) {
+    dismissToast(toast);
   };
 
   $scope.$on('show error', function (evnt, msg) {
-    $scope.errorMessage = msg;
-    $scope.errorDismissing = false;
-    $timeout(function () { $scope.errorVisible = true; }, 0);
-    $timeout.cancel($scope._errorTimer);
-    $scope._errorTimer = $timeout(function () {
-      $scope.errorDismissing = true;
-      $scope.errorVisible = false;
-      $timeout(function () {
-        $scope.errorMessage = null;
-        $scope.errorDismissing = false;
-      }, 200);
-    }, 4000);
+    addToast('error', msg);
   });
 
   // Animate activity and socketMessage visibility (set via $rootScope in services.js)
@@ -379,7 +378,13 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     });
 
     socket.on('card pack set', function (roomState) {
-      $scope.$emit('show message', 'Card pack changed...');
+      var oldPack = $scope.cardPack;
+      var newPack = roomState.cardPack;
+      if (oldPack && oldPack !== newPack) {
+        $scope.$emit('show message', 'Card pack changed from ' + oldPack + ' to ' + newPack);
+      } else {
+        $scope.$emit('show message', 'Card pack set to ' + newPack);
+      }
       refreshRoomInfo(roomState);
     });
 
