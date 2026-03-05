@@ -11,11 +11,6 @@ var pokerAppServices = angular.module('pokerApp.services', []);
 
 pokerAppServices.value('version', '0.1');
 
-pokerAppServices.service('socket', ['$rootScope',  '$timeout', function ($rootScope) {
-  var sock = new Sock($rootScope);
-  return sock;
-}]);
-
 pokerAppServices.factory('socket', ['$rootScope', function ($rootScope) {
   console.log( location.protocol + '//' + location.hostname + ':' + location.port );
   var socket = io(location.protocol + '//' + location.hostname + ':' + location.port, {
@@ -37,33 +32,15 @@ pokerAppServices.factory('socket', ['$rootScope', function ($rootScope) {
     });
     // console.log(reason);
   });
-  socket.on('connect_failed', function (reason) {
-    // console.log('service: on connect failed', reason);
+  socket.on('connect_error', function (err) {
     $rootScope.$apply(function () {
-      $rootScope.socketMessage = "🚨 Connection failed";
+      $rootScope.socketMessage = "🚨 Connection error";
     });
-    // console.log(reason);
   });
   socket.on('disconnect', function () {
-    // console.log('service: on disconnect');
     $rootScope.$apply(function () {
       $rootScope.socketMessage = "🚨 Disconnected";
     });
-    // console.log('disconnected');
-  });
-  socket.on('connecting', function () {
-    // console.log('service: on connecting');
-    $rootScope.$apply(function () {
-      $rootScope.socketMessage = "Connecting...";
-    });
-    // console.log('disconnected');
-  });
-  socket.on('reconnecting', function () {
-    // console.log('service: on reconnecting');
-    $rootScope.$apply(function () {
-      $rootScope.socketMessage = "Reconnecting...";
-    });
-    // console.log('disconnected');
   });
   socket.on('reconnect', function () {
     // console.log('service: on reconnect');
@@ -90,6 +67,9 @@ pokerAppServices.factory('socket', ['$rootScope', function ($rootScope) {
   });
 
   return {
+    get connected() {
+      return socket.connected;
+    },
     on: function (eventName, callback) {
       $rootScope.socketMessage = null;
       socket.on(eventName, function () {

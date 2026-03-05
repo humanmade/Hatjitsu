@@ -18,27 +18,31 @@ var statsDisconnectCount = 0;
 var statsSocketCount = 0;
 var statsSocketMessagesReceived = 0;
 
-app.use(express.static('app'));
+app.use(express.static('app', {
+  maxAge: env === 'production' ? '1d' : 0
+}));
 app.set('views', path.join(__dirname, '../app'));
 
 app.get('/', function(req, res) {
   res.render('index.ejs');
 });
 
-app.get('/debug_state', function(req, res) {
-  res.json({
-    "stats": {
-      "connectionCount": statsConnectionCount,
-      "disconnectCount": statsDisconnectCount,
-      "currentSocketCount": statsSocketCount,
-      "socketMessagesReceived": statsSocketMessagesReceived
-    },
-    "rooms": _.map(lobby.rooms, function(room, key) { return room.json() } )
+if (env === 'development') {
+  app.get('/debug_state', function(req, res) {
+    res.json({
+      "stats": {
+        "connectionCount": statsConnectionCount,
+        "disconnectCount": statsDisconnectCount,
+        "currentSocketCount": statsSocketCount,
+        "socketMessagesReceived": statsSocketMessagesReceived
+      },
+      "rooms": _.map(lobby.rooms, function(room, key) { return room.json() } )
+    });
   });
-});
+}
 
 app.get('/room/:id', function(req, res) {
-  if ( ! req.params.id in lobby.rooms ) {
+  if ( !(req.params.id in lobby.rooms) ) {
     lobby.createRoom( req.params.id );
   }
   res.render('index.ejs');
@@ -81,12 +85,11 @@ io.sockets.on('connection', function (socket) {
   socket.on('join room', function (data, callback) {
     statsSocketMessagesReceived++;
     console.log("on join room " + data.id, socket.id, data);
-    socket.join( data.id );
     var room = lobby.joinRoom(socket, data);
     if(room.error) {
       callback( { error: room.error } );
     } else {
-      callback(room.info());
+      callback(room.info(data.sessionId));
     }
   } );
 
@@ -141,6 +144,8 @@ io.sockets.on('connection', function (socket) {
     var room = lobby.getRoom(data.id);
     if (room.error) {
       callback( { error: room.error });
+    } else if (!room.isAdmin(socket.id)) {
+      callback( { error: 'Only the room admin can reset votes' });
     } else {
       room.resetVote();
       callback( {} );
@@ -152,6 +157,8 @@ io.sockets.on('connection', function (socket) {
     var room = lobby.getRoom(data.id);
     if (room.error) {
       callback( { error: room.error });
+    } else if (!room.isAdmin(socket.id)) {
+      callback( { error: 'Only the room admin can force reveal' });
     } else {
       room.forceReveal();
       callback( {} );
@@ -163,6 +170,8 @@ io.sockets.on('connection', function (socket) {
     var room = lobby.getRoom(data.id);
     if (room.error) {
       callback( { error: room.error });
+    } else if (!room.isAdmin(socket.id)) {
+      callback( { error: 'Only the room admin can toggle voter status' });
     } else {
       room.toggleVoter(data);
       callback( {} );

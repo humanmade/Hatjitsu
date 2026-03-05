@@ -1,14 +1,15 @@
-FROM alpine:latest
+FROM node:20-alpine
 
-ENV instDir /Hatjitsu
+WORKDIR /app
 
-RUN apk --no-cache add nodejs git && \
-    git clone https://github.com/humanmade/Hatjitsu.git ${instDir} && \
-    cd ${instDir} && \
-    npm install -d
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY . .
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
 
 EXPOSE 5099
 
-WORKDIR ${instDir}
-
-CMD node server
+CMD ["node", "server/server.js"]

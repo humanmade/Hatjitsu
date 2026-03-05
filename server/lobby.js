@@ -11,7 +11,7 @@ var Lobby = function(io) {
 Lobby.prototype.createRoom = function(id) {
   id = id === undefined ? this.createUniqueURL() : id;
   if (this.rooms[id]) {
-    this.createRoom(id);
+    return this.createRoom();
   }
 
   // remove any existing empty rooms first
@@ -29,9 +29,9 @@ Lobby.prototype.createRoom = function(id) {
 
 Lobby.prototype.createUniqueURL = function() {
   var text = '',
-    possible = '0123456789',
+    possible = 'abcdefghijkmnopqrstuvwxyz23456789',
     i;
-  for ( i = 0; i < 5; i++ ) {
+  for ( i = 0; i < 8; i++ ) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
@@ -47,13 +47,11 @@ Lobby.prototype.joinRoom = function(socket, data) {
     this.createRoom( data.id );
   }
 
-  socket.join( data.id );
-
   var room = this.getRoom(data.id);
   if (socket != null && data && data.sessionId != null) {
     room.enter(socket, data);
     socket.join(data.id);
-    socket.broadcast.to(data.id).emit('room joined');
+    socket.broadcast.to(data.id).emit('room joined', room.json());
   }
   return room;
 };
@@ -79,7 +77,7 @@ Lobby.prototype.broadcastDisconnect = function(socket) {
     if ( r.id ) {
       console.log( 'leaving room ' + r.id, socket.id, r );
       r.leave(socket);
-      this.io.to( room ).emit('room left');
+      this.io.to( room ).emit('room left', r.json());
     } else {
       console.log( 'cant find room with ID ' + room );
     }

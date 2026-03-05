@@ -217,7 +217,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
   };
 
   var haveIVoted = function () {
-    if ($scope.myVote === 'undefined' || $scope.myVote === null) {
+    if ($scope.myVote === undefined || $scope.myVote === null) {
       return false;
     }
     return true;
@@ -328,72 +328,49 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
       return;
     }
 
-    socket.on('room joined', function () {
-      // console.log("on room joined");
-      // console.log("emit room info", { id: $scope.roomId });
-      this.emit('room info', { id: $scope.roomId }, function (response) {
+    // Only register socket listeners once
+    if ($scope._listenersRegistered) {
+      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
         processMessage(response, refreshRoomInfo);
       });
+      return;
+    }
+    $scope._listenersRegistered = true;
+
+    socket.on('room joined', function (roomState) {
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('room left', function () {
-      // console.log("on room left");
-      // console.log("emit room info", { id: $scope.roomId });
-      this.emit('room info', { id: $scope.roomId }, function (response) {
-        processMessage(response, refreshRoomInfo);
-      });
+    socket.on('room left', function (roomState) {
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('card pack set', function () {
+    socket.on('card pack set', function (roomState) {
       $scope.$emit('show message', 'Card pack changed...');
-      // console.log("on card pack set");
-      // console.log("emit room info", { id: $scope.roomId });
-      this.emit('room info', { id: $scope.roomId }, function (response) {
-        processMessage(response, refreshRoomInfo);
-      });
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('voter status changed', function () {
-      // console.log("on voter status changed");
-      // console.log("emit room info", { id: $scope.roomId });
-      this.emit('room info', { id: $scope.roomId }, function (response) {
-        processMessage(response, refreshRoomInfo);
-      });
+    socket.on('voter status changed', function (roomState) {
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('voted', function () {
-      console.log("on voted");
-      // console.log("emit room info", { id: $scope.roomId });
-      this.emit('room info', { id: $scope.roomId }, function (response) {
-        processMessage(response, refreshRoomInfo);
-      });
+    socket.on('voted', function (roomState) {
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('unvoted', function () {
-      // console.log("on unvoted");
-      // console.log("emit room info", { id: $scope.roomId });
-      this.emit('room info', { id: $scope.roomId }, function (response) {
-        processMessage(response, refreshRoomInfo);
-      });
+    socket.on('unvoted', function (roomState) {
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('vote reset', function () {
-      // console.log("on vote reset");
-      // console.log("emit room info", { id: $scope.roomId });
-      this.emit('room info', { id: $scope.roomId }, function (response) {
-        processMessage(response, refreshRoomInfo);
-      });
+    socket.on('vote reset', function (roomState) {
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('reveal', function () {
-      // console.log("reveal event received");
-      // setLocalVote(null);
-      this.emit('room info', { id: $scope.roomId }, function (response) {
-        processMessage(response, refreshRoomInfo);
-      });
+    socket.on('reveal', function (roomState) {
+      refreshRoomInfo(roomState);
     });
 
-    socket.on('connect', () => {
+    socket.on('connect', function () {
       // console.log("on connect");
       var sessionId = this.id;
       // console.log("new socket id = " + sessionId);
@@ -408,14 +385,16 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
         processMessage(response, refreshRoomInfo);
       });
     });
-    socket.on('disconnect', () => {
+    socket.on('disconnect', function () {
       // console.log("on disconnect");
     } );
 
-    // console.log("emit join room", { id: $scope.roomId, sessionId: $scope.sessionId });
-    socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
-      processMessage(response, refreshRoomInfo);
-    });
+    // Only emit join if already connected (the connect handler emits it otherwise)
+    if (socket.connected) {
+      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
+        processMessage(response, refreshRoomInfo);
+      });
+    }
   };
 
   $scope.openDropdown = function (event) {
