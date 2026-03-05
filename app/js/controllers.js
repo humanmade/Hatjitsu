@@ -307,6 +307,9 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     $scope.humanCount = $scope.connections.length;
     $scope.cardPack = roomObj.cardPack;
     $scope.forcedReveal = roomObj.forcedReveal;
+    $scope.history = roomObj.history || [];
+    var defaultLabel = 'Round ' + (($scope.history.length || 0) + 1);
+    $scope.roundLabel = roomObj.roundLabel || defaultLabel;
     $scope.cards = chooseCardPack($scope.cardPack);
 
     $scope.votes = _.chain($scope.connections).filter(function (c) {
@@ -409,6 +412,10 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     });
 
     socket.on('name changed', function (roomState) {
+      refreshRoomInfo(roomState);
+    });
+
+    socket.on('round label set', function (roomState) {
       refreshRoomInfo(roomState);
     });
 
@@ -592,6 +599,51 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
   $scope.initialVoterChoice = true;
   $scope.customName = getCookie('userName') || '';
   $scope.nameEdit = { active: false, value: '' };
+  $scope.history = [];
+  $scope.roundLabel = '';
+  $scope.showHistory = false;
+
+  var roundLabelTimer = null;
+  $scope.updateRoundLabel = function () {
+    if (roundLabelTimer) {
+      $timeout.cancel(roundLabelTimer);
+    }
+    roundLabelTimer = $timeout(function () {
+      socket.emit('set round label', { id: $scope.roomId, label: $scope.roundLabel }, function () {});
+    }, 300);
+  };
+
+  var downloadFile = function (content, filename, mimeType) {
+    var blob = new Blob([content], { type: mimeType });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  $scope.exportHistoryCSV = function () {
+    var lines = ['Round,Card Pack,Votes'];
+    _.each($scope.history, function (round) {
+      var votes = _.pluck(round.votes, 'vote').join(' ');
+      lines.push('"' + (round.label || '').replace(/"/g, '""') + '","' + (round.cardPack || '').replace(/"/g, '""') + '","' + votes + '"');
+    });
+    downloadFile(lines.join('\n'), 'voting-history.csv', 'text/csv');
+  };
+
+  $scope.exportHistoryMarkdown = function () {
+    var lines = [];
+    _.each($scope.history, function (round) {
+      lines.push('## ' + (round.label || 'Round'));
+      lines.push('**Card pack:** ' + (round.cardPack || ''));
+      lines.push('**Votes:** ' + _.pluck(round.votes, 'vote').join(', '));
+      lines.push('');
+    });
+    downloadFile(lines.join('\n'), 'voting-history.md', 'text/markdown');
+  };
 }
 
 RoomCtrl.$inject = ['$scope', '$routeParams', '$timeout', 'socket'];

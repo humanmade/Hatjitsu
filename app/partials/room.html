@@ -40,6 +40,14 @@
 
   </div>
   <section ng-hide="showRolePrompt" class="votePanel" >
+    <div class="round-label">
+      <input class="round-label__input"
+        ng-model="roundLabel"
+        ng-change="updateRoundLabel()"
+        placeholder=""
+        maxlength="100"
+        style="width: {{(roundLabel.length || 1) + 2}}ch">
+    </div>
     <div class="cards{{votingState}}" id="chosenCards">
       <div
         title="{{(connection.forcedReveal || connection.votes.length === connection.voterCount) ? '' : connection.name}}"
@@ -84,6 +92,30 @@
       </button>
     </div>
 
+  </section>
+
+  <section ng-hide="showRolePrompt" class="history-panel" ng-show="history.length > 0">
+    <button class="history-panel__toggle" ng-click="showHistory = !showHistory">
+      Voting History <span class="history-panel__arrow">{{showHistory ? '&#9652;' : '&#9662;'}}</span>
+    </button>
+    <div ng-show="showHistory" class="history-panel__list">
+      <div ng-repeat="round in history track by $index" class="history-round">
+        <div class="history-round__header">
+          <strong>{{round.label}}</strong>
+          <span class="history-round__pack">{{round.cardPack}}</span>
+        </div>
+        <div class="history-round__votes">
+          <span ng-repeat="v in round.votes track by $index"
+                class="history-vote">
+            {{v.vote}}
+          </span>
+        </div>
+      </div>
+      <div class="history-panel__export">
+        <a href ng-click="exportHistoryCSV()">Export CSV</a>
+        <a href ng-click="exportHistoryMarkdown()">Export Markdown</a>
+      </div>
+    </div>
   </section>
 
   <div ng-hide="showRolePrompt" class="my-votes">
