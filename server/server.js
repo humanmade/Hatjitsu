@@ -144,7 +144,7 @@ io.sockets.on('connection', function (socket) {
     var room = lobby.getRoom(data.id);
     if (room.error) {
       callback( { error: room.error });
-    } else if (!room.isAdmin(socket.id)) {
+    } else if (!room.isAdmin(socket.id) && !room.votingFinished()) {
       callback( { error: 'Only the room admin can reset votes' });
     } else {
       room.resetVote();

@@ -275,9 +275,28 @@ Room.prototype.leave = function(socket) {
     // clean up connections with no sockets
     if ( this.connections[connection.sessionId].socketIds.length < 1 ) {
       this.connections[connection.sessionId] = null;
+
+      // Reassign admin if the leaving user was the admin
+      if (connection.sessionId === this.adminSessionId) {
+        this.reassignAdmin();
+      }
     }
   } else {
     console.log( 'did not find connection?' );
+  }
+}
+
+Room.prototype.reassignAdmin = function() {
+  var nextAdmin = _.find(this.connections, function(c) {
+    return c && c.socketIds.length > 0;
+  });
+
+  if (nextAdmin) {
+    this.adminSessionId = nextAdmin.sessionId;
+    this.hasAdmin = true;
+  } else {
+    this.adminSessionId = null;
+    this.hasAdmin = false;
   }
 }
 
@@ -328,6 +347,19 @@ Room.prototype.destroyVote = function(socket, data) {
   }
 
   socket.broadcast.to(this.id).emit('unvoted', this.json());
+}
+
+Room.prototype.votingFinished = function() {
+  if (this.forcedReveal) {
+    return true;
+  }
+  var voters = _.filter(this.connections, function(c) {
+    return c && c.socketIds.length > 0 && c.voter;
+  });
+  if (voters.length === 0) {
+    return false;
+  }
+  return _.every(voters, function(v) { return v.vote !== null && v.vote !== undefined; });
 }
 
 Room.prototype.resetVote = function() {
