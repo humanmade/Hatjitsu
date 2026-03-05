@@ -39,10 +39,22 @@
         </header>
 
         <div class="alert">
-          <div class="activity notification" ng-show="activity"><span class="loading--white loading--active"></span></div>
-          <div class="socketMessage notification" ng-show="socketMessage" ng-bind="socketMessage"></div>
-          <div class="appError notification" ng-show="errorMessage" ng-bind="errorMessage"></div>
-          <div class="message notification" ng-show="message">{{message}} <button class="notification__dismiss" ng-click="dismissMessage()">&times;</button></div>
+          <div class="activity notification" ng-show="activity" ng-class="{'notification--visible': activityVisible}">
+            <span class="loading--white loading--active"></span>
+          </div>
+          <div class="socketMessage notification" ng-show="socketMessage" ng-class="{'notification--visible': socketMessageVisible}">
+            <span class="notification__icon">&#9888;</span>
+            <span ng-bind="socketMessage"></span>
+          </div>
+          <div class="appError notification" ng-show="errorMessage" ng-class="{'notification--visible': errorVisible, 'notification--dismissing': errorDismissing}">
+            <span class="notification__icon">&#9888;</span>
+            <span ng-bind="errorMessage"></span>
+          </div>
+          <div class="message notification" ng-show="message" ng-class="{'notification--visible': messageVisible, 'notification--dismissing': messageDismissing}">
+            <span class="notification__icon">&#9432;</span>
+            <span>{{message}}</span>
+            <button class="notification__dismiss" ng-click="dismissMessage()">&times;</button>
+          </div>
         </div>
 
         <div class="content" ng-view></div>

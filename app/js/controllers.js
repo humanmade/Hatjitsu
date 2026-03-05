@@ -48,17 +48,54 @@ function MainCtrl($scope, $timeout) {
 
   $scope.$on('show message', function (evnt, msg) {
     $scope.message = msg;
+    $scope.messageDismissing = false;
+    $timeout(function () { $scope.messageVisible = true; }, 0);
+    $timeout.cancel($scope._messageTimer);
+    $scope._messageTimer = $timeout(function () {
+      $scope.dismissMessage();
+    }, 4000);
   });
 
   $scope.dismissMessage = function () {
-    $scope.message = null;
+    $scope.messageDismissing = true;
+    $scope.messageVisible = false;
+    $timeout.cancel($scope._messageTimer);
+    $timeout(function () {
+      $scope.message = null;
+      $scope.messageDismissing = false;
+    }, 200);
   };
 
   $scope.$on('show error', function (evnt, msg) {
     $scope.errorMessage = msg;
-    $timeout(function () {
-      $scope.errorMessage = null;
-    }, 3000);
+    $scope.errorDismissing = false;
+    $timeout(function () { $scope.errorVisible = true; }, 0);
+    $timeout.cancel($scope._errorTimer);
+    $scope._errorTimer = $timeout(function () {
+      $scope.errorDismissing = true;
+      $scope.errorVisible = false;
+      $timeout(function () {
+        $scope.errorMessage = null;
+        $scope.errorDismissing = false;
+      }, 200);
+    }, 4000);
+  });
+
+  // Animate activity and socketMessage visibility (set via $rootScope in services.js)
+  $scope.$watch('activity', function (val) {
+    if (val) {
+      $timeout(function () { $scope.activityVisible = true; }, 0);
+    } else {
+      $scope.activityVisible = false;
+    }
+  });
+
+  $scope.$watch('socketMessage', function (val) {
+    if (val) {
+      $timeout(function () { $scope.socketMessageVisible = true; }, 0);
+    } else {
+      $scope.socketMessageVisible = false;
+    }
   });
 }
 
