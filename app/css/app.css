@@ -231,6 +231,22 @@ Alerts
 	display: none;
 }
 
+.notification__dismiss {
+	background: none;
+	border: none;
+	color: inherit;
+	cursor: pointer;
+	font-size: 1.2em;
+	margin-left: 0.5em;
+	opacity: 0.7;
+	padding: 0;
+	vertical-align: middle;
+}
+
+.notification__dismiss:hover {
+	opacity: 1;
+}
+
 .notification.appError {
 	background-color: #f14668;
 }
@@ -313,6 +329,33 @@ h1.header__text {
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
+}
+
+.role-prompt {
+	margin: 4rem auto;
+	max-width: 20rem;
+	text-align: center;
+}
+
+.role-prompt .btn {
+	margin: 0.5rem;
+}
+
+.card--make-spectator {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1;
+	opacity: 0.4;
+	padding: 2px;
+	position: absolute;
+	right: 2px;
+	top: 2px;
+}
+
+.card--make-spectator:hover {
+	opacity: 1;
 }
 
 .bg:not(.body--unanimous) .fireworks {

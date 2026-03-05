@@ -1,5 +1,11 @@
 <div ng-init="configureRoom()">
-  <div class="switch">
+  <div ng-show="showRolePrompt" class="role-prompt">
+    <h3>Join this room</h3>
+    <p>Would you like to vote or just watch?</p>
+    <button ng-click="joinAsVoter()" class="btn">Vote</button>
+    <button ng-click="joinAsSpectator()" class="btn btn--secondary">Watch</button>
+  </div>
+  <div ng-hide="showRolePrompt" class="switch">
     <label class="label" ng-disabled="forceRevealDisable" data-on="You are a voter" data-off="You are a spectator" for="voter">
       <input type="checkbox" ng-model="voter" ng-disabled="forceRevealDisable" ng-change="toggleVoter()" id="voter"title="You can toggle voting/spectating while voting is in progress.">
       <span ng-show="voter" title="You can toggle voting/spectating while voting is in progress.">I am voting</span>
@@ -33,7 +39,7 @@
       <strong ng-show="showAdmin" class="admin-indicator" ng-switch on="showAdmin">⚡️ Room Admin</strong>
 
   </div>
-  <section class="votePanel" >
+  <section ng-hide="showRolePrompt" class="votePanel" >
     <div class="cards{{votingState}}" id="chosenCards">
       <div
         title="{{(connection.forcedReveal || connection.votes.length === connection.voterCount) ? '' : connection.name}}"
@@ -60,6 +66,13 @@
         <div class="card--side-1">?</div>
         <div class="card--side-2">?</div>
         <div class="card--name">{{connection.name}}</div>
+        <button
+          ng-show="showAdmin && connection.sessionId !== sessionId"
+          ng-click="makeSpectator(connection.sessionId)"
+          class="card--make-spectator"
+          title="Move to spectator">
+          &#128065;
+        </button>
       </div>
     </div>
     <div
@@ -73,7 +86,7 @@
 
   </section>
 
-  <div class="my-votes">
+  <div ng-hide="showRolePrompt" class="my-votes">
     <div class="cardPanel-meta">
       <div ng-show="voter">
         <div ng-switch on="voted">

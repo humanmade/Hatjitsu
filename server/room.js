@@ -232,7 +232,7 @@ Room.prototype.enter = function(socket, data) {
     sessionId: data.sessionId,
     socketIds: [ socket.id ],
     vote: null,
-    voter: true
+    voter: data.voter !== undefined ? data.voter : true
   };
 }
 

@@ -48,10 +48,11 @@ function MainCtrl($scope, $timeout) {
 
   $scope.$on('show message', function (evnt, msg) {
     $scope.message = msg;
-    $timeout(function () {
-      $scope.message = null;
-    }, 4000);
   });
+
+  $scope.dismissMessage = function () {
+    $scope.message = null;
+  };
 
   $scope.$on('show error', function (evnt, msg) {
     $scope.errorMessage = msg;
@@ -289,6 +290,9 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     var connection = myConnectionHash();
 
     if (connection) {
+      if ($scope.voter && !connection.voter) {
+        $scope.$emit('show message', 'The room admin moved you to spectator.');
+      }
       $scope.voter = connection.voter;
       $scope.myVote = connection.vote;
       $scope.myColor = connection.color;
@@ -306,7 +310,23 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
 
   };
 
+  $scope.joinAsVoter = function () {
+    $scope.initialVoterChoice = true;
+    $scope.showRolePrompt = false;
+    $scope.configureRoom();
+  };
+
+  $scope.joinAsSpectator = function () {
+    $scope.initialVoterChoice = false;
+    $scope.voter = false;
+    $scope.showRolePrompt = false;
+    $scope.configureRoom();
+  };
+
   $scope.configureRoom = function () {
+    if ($scope.showRolePrompt) {
+      return;
+    }
 
     socket.on('room joined', function () {
       // console.log("on room joined");
@@ -384,7 +404,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
 
       // console.log("session id = " + $scope.sessionId);
       // console.log("emit join room", { id: $scope.roomId, sessionId: $scope.sessionId });
-      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId }, function (response) {
+      socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
         processMessage(response, refreshRoomInfo);
       });
     });
@@ -393,7 +413,7 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     } );
 
     // console.log("emit join room", { id: $scope.roomId, sessionId: $scope.sessionId });
-    socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId }, function (response) {
+    socket.emit('join room', { id: $scope.roomId, sessionId: $scope.sessionId, voter: $scope.initialVoterChoice }, function (response) {
       processMessage(response, refreshRoomInfo);
     });
   };
@@ -479,6 +499,16 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     });
   };
 
+  $scope.makeSpectator = function (sessionId) {
+    socket.emit('toggle voter', {
+      id: $scope.roomId,
+      voter: false,
+      sessionId: sessionId
+    }, function (response) {
+      processMessage(response);
+    });
+  };
+
   document.addEventListener( "click", (evt) => {
     const element = document.getElementById( 'dd' );
     let targetElement = evt.target; // clicked element
@@ -512,6 +542,8 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
   $scope.forceRevealDisable = true;
   $scope.votingAverage = 0;
   $scope.votingTotal = 0;
+  $scope.showRolePrompt = !getCookie('sessionId');
+  $scope.initialVoterChoice = true;
 }
 
 RoomCtrl.$inject = ['$scope', '$routeParams', '$timeout', 'socket'];
