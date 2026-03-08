@@ -1,92 +1,58 @@
 /*jslint indent: 2, browser: true */
-/*global angular, Sock, io */
+/*global angular, createSocketClient, getCookie, setCookie */
 
 'use strict';
 
 /* Services */
 
-// Demonstrate how to register services
-// In this case it is a simple value service.
 var pokerAppServices = angular.module('pokerApp.services', []);
 
 pokerAppServices.value('version', '0.1');
 
 pokerAppServices.factory('socket', ['$rootScope', function ($rootScope) {
-  console.log( location.protocol + '//' + location.hostname + ':' + location.port );
-  var socket = io(location.protocol + '//' + location.hostname + ':' + location.port, {
-/*    'reconnect': true,
-    'reconnection delay': 500,
-    'max reconnection attempts': 10,
-    'try multiple transports': true,
-    'transports': ['websocket', 'htmlfile', 'xhr-polling', 'jsonp-polling']*/
-  });
+  var client = createSocketClient();
 
   $rootScope.socketMessage = null;
   $rootScope.activity = false;
   $rootScope.sessionId = null;
 
-  socket.on('error', function (reason) {
-    // console.log('service: on error', reason);
+  client.onStatusChange(function (status) {
     $rootScope.$apply(function () {
-      $rootScope.socketMessage = "🚨 Error: " + reason;
-    });
-    // console.log(reason);
-  });
-  socket.on('connect_error', function (err) {
-    $rootScope.$apply(function () {
-      $rootScope.socketMessage = "🚨 Connection error";
-    });
-  });
-  socket.on('disconnect', function () {
-    $rootScope.$apply(function () {
-      $rootScope.socketMessage = "🚨 Disconnected";
-    });
-  });
-  socket.on('reconnect', function () {
-    // console.log('service: on reconnect');
-    $rootScope.$apply(function () {
-      $rootScope.socketMessage = null;
-    });
-    // console.log('disconnected');
-  });
-  socket.on('reconnect_failed', function () {
-    $rootScope.$apply(function () {
-      $rootScope.socketMessage = "🚨 Reconnect failed";
-    });
-  });
-
-  socket.on('connect', function () {
-    var sessionId = socket.id;
-    $rootScope.$apply(function () {
-      $rootScope.socketMessage = null;
-      if (!getCookie("sessionId")) {
-        setCookie( "sessionId", sessionId,  0.5 );
+      if (status.message) {
+        $rootScope.socketMessage = "\uD83D\uDEA8 " + status.message;
+      } else {
+        $rootScope.socketMessage = null;
       }
-      $rootScope.sessionId = getCookie("sessionId");
+      if (status.sessionId !== undefined) {
+        if (!getCookie("sessionId")) {
+          setCookie("sessionId", status.sessionId, 0.5);
+        }
+        $rootScope.sessionId = getCookie("sessionId");
+      }
     });
   });
 
   return {
     get connected() {
-      return socket.connected;
+      return client.connected;
     },
     on: function (eventName, callback) {
       $rootScope.socketMessage = null;
-      socket.on(eventName, function () {
+      client.on(eventName, function () {
         var args = arguments;
         $rootScope.$apply(function () {
-          callback.apply(socket, args);
+          callback.apply(client.raw, args);
         });
       });
     },
     emit: function (eventName, data, callback) {
       $rootScope.activity = true;
-      socket.emit(eventName, data, function () {
+      client.emit(eventName, data, function () {
         var args = arguments;
         $rootScope.$apply(function () {
           $rootScope.activity = false;
           if (callback) {
-            callback.apply(socket, args);
+            callback.apply(client.raw, args);
           }
         });
       });

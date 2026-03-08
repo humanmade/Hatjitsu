@@ -1,5 +1,5 @@
 /*jslint indent: 2, browser: true */
-/*global angular, _ */
+/*global angular, _, DECKS, chooseCardPack, computeVoteResults, getCookie, setCookie */
 
 'use strict';
 
@@ -7,18 +7,7 @@
 function MainCtrl($scope, $timeout) {
   $scope.logoState = '';
   $scope.toasts = [];
-  $scope.decks = {
-    '135 set': [ '1', '3', '5', '8', '13', '21', '?'],
-    'Fibonacci': ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?'],
-    'Fibonacci Goat': [ '1', '2', '3', '5', '8', '13', '?', '\u2615' ],
-    'Mountain Goat': ['0', '\u00BD', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '\u2615'],
-    'Sequential': ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '?'],
-    'Playing Cards': ['A\u2660', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J\u2654', 'Q\u2654', 'K\u2654'],
-    'T-Shirt': ['XL', 'L', 'M', 'S', 'XS', '?'],
-    'Fruit': ['🍎', '🍊', '🍌', '🍉', '🍑', '🍇'],
-    '1-5': [1, 2, 3, 4, 5],
-    '1-10': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-  };
+  $scope.decks = DECKS;
 
   $scope.$on('$routeChangeSuccess', function () {
     $scope.logoState = '';
@@ -126,30 +115,6 @@ function LobbyCtrl($scope, $location, socket) {
 
 LobbyCtrl.$inject = ['$scope', '$location', 'socket'];
 
-function standardDeviation(values){
-  var avg = average(values);
-
-  var squareDiffs = values.map(function(value){
-    var diff = value - avg;
-    var sqrDiff = diff * diff;
-    return sqrDiff;
-  });
-
-  var avgSquareDiff = average(squareDiffs);
-
-  var stdDev = Math.sqrt(avgSquareDiff);
-  return stdDev;
-}
-
-function average(data){
-  var sum = data.reduce(function(sum, value){
-    return sum + parseInt(value);
-  }, 0);
-
-  var avg = sum / data.length;
-  return avg;
-}
-
 function RoomCtrl($scope, $routeParams, $timeout, socket) {
 
   var processMessage = function (response, process) {
@@ -161,87 +126,60 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     }
   };
 
-  var sumOfTwo = function (a, b) {
-    return a + b;
-  };
-
   var processVotes = function () {
     var voteCount = $scope.votes.length;
     _.each($scope.votes, function (v) {
       v.visibleVote = v.visibleVote === undefined && (!$scope.forcedReveal && voteCount < $scope.voterCount) ? 'X' : v.vote;
     });
 
+    var results = computeVoteResults($scope.votes, $scope.voterCount, $scope.forcedReveal);
+
     var voteArr = [];
-    voteArr.length = Math.max(0, $scope.voterCount - voteCount);
+    voteArr.length = results.placeholderCount;
     $scope.placeholderVotes = voteArr;
-    $scope.showAverage = voteArr.length === 0;
+    $scope.showAverage = results.showAverage;
+    $scope.votingAverage = results.average;
+    $scope.votingTotal = results.total;
+    $scope.votingStandardDeviation = results.stddev;
+    $scope.forceRevealDisable = results.forceRevealDisable;
 
-    var validVotes = _.filter(_.pluck($scope.votes, 'vote'), function (vote) {
-      return !isNaN(parseFloat(vote));
-    });
-
-    if (validVotes.length > 0) {
-      var total = _.reduce(_.map(validVotes, parseFloat), sumOfTwo, 0);
-      $scope.votingAverage = Math.round(total / validVotes.length);
-      $scope.votingTotal = total;
-      $scope.votingStandardDeviation = standardDeviation(validVotes);
-    } else {
-      $scope.votingAverage = 0;
-      $scope.votingTotal = 0;
-      $scope.votingStandardDeviation = 0;
+    if (results.voteStatus === 'unfinished') {
+      $scope.$emit('unfinished vote');
+      return;
     }
 
-    $scope.forceRevealDisable = ($scope.forcedReveal || ($scope.votes.length === $scope.voterCount && $scope.voterCount > 0));
+    var voteEventMap = {
+      'unanimous': 'unanimous vote',
+      'problem': 'problem vote',
+      'not_unanimous': 'not unanimous vote'
+    };
+    $scope.$emit(voteEventMap[results.voteStatus]);
 
-    var allVotesCast = $scope.voterCount > 0 && $scope.votes.length === $scope.voterCount && _.every($scope.votes, function (v) {
-      return v.vote !== undefined && v.vote !== null;
-    });
-
-    if ( !(allVotesCast || $scope.forcedReveal)) {
-			$scope.$emit('unfinished vote');
-			return;
-		}
-
-		var vote = 'not unanimous vote';
-		var uniqVotes = _.chain($scope.votes).pluck('vote').uniq().value().length;
-		if (uniqVotes === 1) {
-			vote = 'unanimous vote';
-		} else if (uniqVotes === $scope.voterCount) {
-			vote = 'problem vote';
-		} else if ($scope.voterCount > 3 && uniqVotes === ($scope.voterCount - 1)) {
-			vote = 'problem vote';
-		}
-		$scope.$emit(vote);
-
-		if (! document.hidden) { // Only trigger notification if the tab is not active
-			return;
-		}
-		if (Notification.permission === "granted") {
-			const notification = new Notification("Voting Complete", {
-				body: "All users have voted. Check the tab to view the results.",
-				icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png" // Set the notification icon
-			});
-
-			// Add an onclick handler to focus the tab when the notification is clicked
-			notification.onclick = function () {
-				window.focus();
-			};
-		} else if (Notification.permission === "default") {
-			Notification.requestPermission().then(function (permission) {
-				if (permission !== "granted") {
-					return;
-				}
-				const notification = new Notification("Voting Complete", {
-					body: "All users have voted. Check the tab to view the results.",
-					icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png" // Set the notification icon
-				});
-
-				// Add an onclick handler to focus the tab when the notification is clicked
-				notification.onclick = function () {
-					window.focus();
-				};
-			});
-		}
+    if (!document.hidden) {
+      return;
+    }
+    if (Notification.permission === "granted") {
+      const notification = new Notification("Voting Complete", {
+        body: "All users have voted. Check the tab to view the results.",
+        icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png"
+      });
+      notification.onclick = function () {
+        window.focus();
+      };
+    } else if (Notification.permission === "default") {
+      Notification.requestPermission().then(function (permission) {
+        if (permission !== "granted") {
+          return;
+        }
+        const notification = new Notification("Voting Complete", {
+          body: "All users have voted. Check the tab to view the results.",
+          icon: "https://planningpoker.hmn.md/img/hmpoker_card_icon.png"
+        });
+        notification.onclick = function () {
+          window.focus();
+        };
+      });
+    }
   };
 
   var myConnectionHash = function () {
@@ -288,14 +226,6 @@ function RoomCtrl($scope, $routeParams, $timeout, socket) {
     }
     processVotes();
     setVotingState();
-  };
-
-  var chooseCardPack = function (val) {
-    if ( val in $scope.decks ) {
-      return $scope.decks[val];
-    }
-
-    return val.split( ',' );
   };
 
   var refreshRoomInfo = function (roomObj) {
