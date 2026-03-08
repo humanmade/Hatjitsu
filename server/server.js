@@ -18,6 +18,10 @@ var statsDisconnectCount = 0;
 var statsSocketCount = 0;
 var statsSocketMessagesReceived = 0;
 
+app.use('/lib/angular', express.static('node_modules/angular'));
+app.use('/lib/angular-route', express.static('node_modules/angular-route'));
+app.use('/lib/underscore', express.static('node_modules/underscore'));
+
 app.use(express.static('app', {
   maxAge: env === 'production' ? '1d' : 0
 }));

@@ -13,6 +13,8 @@
     "ejs": "^5.0.1",
     "express": "^5.2.1",
     "socket.io": "^4.8.1",
+    "angular": "1.8.3",
+    "angular-route": "1.8.3",
     "underscore": "^1.13.6",
     "unique-names-generator": "^4.7.1"
   }
