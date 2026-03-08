@@ -1,5 +1,5 @@
-var _ = require('underscore')._;
 const { uniqueNamesGenerator, adjectives, animals } = require('unique-names-generator');
+const logger = require('./logger');
 
 const colours = [
   '#144272',
@@ -217,7 +217,6 @@ Room.prototype.isAdmin = function(socketId) {
 };
 
 Room.prototype.enter = function(socket, data) {
-  // console.log("room entered as " + socket.id);
   if (this.connections[data.sessionId]) {
     this.connections[data.sessionId].socketIds.push( socket.id );
     if (data.name) {
@@ -256,7 +255,7 @@ Room.prototype.enter = function(socket, data) {
 }
 
 Room.prototype.leave = function(socket) {
-  let connection = _.find(this.connections, (c) => {
+  let connection = Object.values(this.connections).find((c) => {
     if ( ! c ) {
       return false;
     }
@@ -269,7 +268,7 @@ Room.prototype.leave = function(socket) {
   });
 
   if (connection && connection.sessionId) {
-    console.log( 'eliminating socket with ID: ' + socket.id, JSON.stringify( this.connections[connection.sessionId].socketIds ) );
+    logger.debug( 'eliminating socket with ID: ' + socket.id, JSON.stringify( this.connections[connection.sessionId].socketIds ) );
     const index = this.connections[connection.sessionId].socketIds.indexOf(socket.id);
 
     if (index > -1) {
@@ -286,12 +285,12 @@ Room.prototype.leave = function(socket) {
       }
     }
   } else {
-    console.log( 'did not find connection?' );
+    logger.warn( 'did not find connection for socket', socket.id );
   }
 }
 
 Room.prototype.reassignAdmin = function() {
-  var nextAdmin = _.find(this.connections, function(c) {
+  var nextAdmin = Object.values(this.connections).find(function(c) {
     return c && c.socketIds.length > 0;
   });
 
@@ -315,14 +314,13 @@ Room.prototype.toggleVoter = function(data) {
     if (!data.voter) {
       this.connections[data.sessionId]['vote'] = null;
     }
-    // console.log("voter set to " + data.voter + " for " + data.sessionId);
   }
 
   this.io.sockets.in(this.id).emit('voter status changed', this.json());
 }
 
 Room.prototype.findSessionBySocket = function(socketId) {
-  return _.find(this.connections, function(c) {
+  return Object.values(this.connections).find(function(c) {
     return c && c.socketIds.includes(socketId);
   });
 };
@@ -331,7 +329,7 @@ Room.prototype.uniquifyName = function(name, excludeSessionId) {
   var self = this;
   var isNameTaken = function(candidate) {
     var lower = candidate.toLowerCase();
-    return _.some(self.connections, function(c) {
+    return Object.values(self.connections).some(function(c) {
       return c && c.socketIds.length > 0 && c.sessionId !== excludeSessionId && c.name.toLowerCase() === lower;
     });
   };
@@ -382,19 +380,19 @@ Room.prototype.votingFinished = function() {
   if (this.forcedReveal) {
     return true;
   }
-  var voters = _.filter(this.connections, function(c) {
+  var voters = Object.values(this.connections).filter(function(c) {
     return c && c.socketIds.length > 0 && c.voter;
   });
   if (voters.length === 0) {
     return false;
   }
-  return _.every(voters, function(v) { return v.vote !== null && v.vote !== undefined; });
+  return voters.every(function(v) { return v.vote !== null && v.vote !== undefined; });
 }
 
 Room.prototype.resetVote = function() {
   // Snapshot the current round into history before clearing
   var votes = [];
-  _.forEach(this.connections, function(c) {
+  Object.values(this.connections).forEach(function(c) {
     if (c && c.voter && c.vote !== null) {
       votes.push({ vote: c.vote });
     }
@@ -409,7 +407,7 @@ Room.prototype.resetVote = function() {
   }
   this.roundLabel = '';
 
-  _.forEach(this.connections, function(c) {
+  Object.values(this.connections).forEach(function(c) {
     if ( c ) {
       c.vote = null;
     }
@@ -425,7 +423,7 @@ Room.prototype.forceReveal = function() {
 }
 
 Room.prototype.getClientCount = function() {
-  return _.filter(this.connections, function(c) {
+  return Object.values(this.connections).filter(function(c) {
     if ( ! c ) {
       return false;
     }
@@ -451,8 +449,7 @@ Room.prototype.json = function() {
     forcedReveal: this.forcedReveal,
     roundLabel: this.roundLabel,
     history: this.history,
-    connections: _.filter(
-      this.connections,
+    connections: Object.values(this.connections).filter(
       function(c) {
         return (c && c.socketIds.length > 0);
       }

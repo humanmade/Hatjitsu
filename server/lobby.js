@@ -1,11 +1,16 @@
-var _ = require('underscore')._;
 const { uniqueNamesGenerator, adjectives, animals } = require('unique-names-generator');
+const logger = require('./logger');
 
 var RoomClass = require('./room.js');
 
 var Lobby = function(io) {
   this.io = io;
   this.rooms = {};
+
+  // Periodic cleanup of empty rooms as a safety net
+  this._cleanupInterval = setInterval(() => {
+    this.cleanEmptyRooms();
+  }, 5 * 60 * 1000);
 };
 
 
@@ -16,13 +21,7 @@ Lobby.prototype.createRoom = function(id) {
   }
 
   // remove any existing empty rooms first
-  var thatRooms = this.rooms;
-  _.each(this.rooms, function(room, key, rooms) {
-    if (room.getClientCount() == 0) {
-      delete thatRooms[key];
-      // console.log("removed room " + key);
-    }
-  });
+  this.cleanEmptyRooms();
 
   this.rooms[id] = new RoomClass.Room(this.io, id);
   return id;
@@ -48,13 +47,21 @@ Lobby.prototype.createUniqueURL = function() {
   return text;
 };
 
+Lobby.prototype.cleanEmptyRooms = function() {
+  Object.entries(this.rooms).forEach(([key, room]) => {
+    if (room.getClientCount() === 0) {
+      delete this.rooms[key];
+    }
+  });
+};
+
 Lobby.prototype.joinRoom = function(socket, data) {
   if ( ! data.id ) {
     return  { error: 'Invalid or missing Room ID' };
   }
 
   if( ! ( data.id in this.rooms ) ) {
-    console.log( 'Creating new room from URL with: ' + data.id );
+    logger.info( 'Creating new room from URL with: ' + data.id );
     this.createRoom( data.id );
   }
 
@@ -86,11 +93,16 @@ Lobby.prototype.broadcastDisconnect = function(socket) {
 
     var r = this.getRoom( room );
     if ( r.id ) {
-      console.log( 'leaving room ' + r.id, socket.id, r );
+      logger.debug( 'leaving room ' + r.id, socket.id );
       r.leave(socket);
       this.io.to( room ).emit('room left', r.json());
+
+      // Clean up the room if it's now empty
+      if ( r.getClientCount() === 0 ) {
+        delete this.rooms[room];
+      }
     } else {
-      console.log( 'cant find room with ID ' + room );
+      logger.warn( 'cant find room with ID ' + room );
     }
   } );
 };
