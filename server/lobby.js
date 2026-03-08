@@ -1,4 +1,5 @@
 var _ = require('underscore')._;
+const { uniqueNamesGenerator, adjectives, animals } = require('unique-names-generator');
 
 var RoomClass = require('./room.js');
 
@@ -28,10 +29,20 @@ Lobby.prototype.createRoom = function(id) {
 };
 
 Lobby.prototype.createUniqueURL = function() {
+  for (var i = 0; i < 10; i++) {
+    var name = uniqueNamesGenerator({
+      dictionaries: [adjectives, animals],
+      separator: '-',
+      length: 2
+    });
+    if (!this.rooms[name]) {
+      return name;
+    }
+  }
+  // Fallback to random string on collision
   var text = '',
-    possible = 'abcdefghijkmnopqrstuvwxyz23456789',
-    i;
-  for ( i = 0; i < 8; i++ ) {
+    possible = 'abcdefghijkmnopqrstuvwxyz23456789';
+  for (var j = 0; j < 8; j++) {
     text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;

@@ -195,6 +195,8 @@ var Room = function(io, id ) {
   this.cardPack = '135 set';
   this.connections = {}; // we collect the votes in here
   this.forcedReveal = false;
+  this.roundLabel = '';
+  this.history = [];
 };
 
 Room.prototype.info = function(sessionId) {
@@ -390,6 +392,23 @@ Room.prototype.votingFinished = function() {
 }
 
 Room.prototype.resetVote = function() {
+  // Snapshot the current round into history before clearing
+  var votes = [];
+  _.forEach(this.connections, function(c) {
+    if (c && c.voter && c.vote !== null) {
+      votes.push({ vote: c.vote });
+    }
+  });
+  if (votes.length > 0) {
+    this.history.push({
+      label: this.roundLabel || 'Round ' + (this.history.length + 1),
+      cardPack: this.cardPack,
+      votes: votes,
+      timestamp: Date.now()
+    });
+  }
+  this.roundLabel = '';
+
   _.forEach(this.connections, function(c) {
     if ( c ) {
       c.vote = null;
@@ -415,6 +434,11 @@ Room.prototype.getClientCount = function() {
   }).length;
 }
 
+Room.prototype.setRoundLabel = function(label) {
+  this.roundLabel = label;
+  this.io.sockets.in(this.id).emit('round label set', this.json());
+};
+
 Room.prototype.json = function() {
   return {
     id: this.id,
@@ -425,6 +449,8 @@ Room.prototype.json = function() {
     adminSessionId: this.adminSessionId,
     cardPack: this.cardPack,
     forcedReveal: this.forcedReveal,
+    roundLabel: this.roundLabel,
+    history: this.history,
     connections: _.filter(
       this.connections,
       function(c) {

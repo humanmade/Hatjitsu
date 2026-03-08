@@ -180,6 +180,15 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  socket.on('set round label', function (data, callback) {
+    statsSocketMessagesReceived++;
+    var room = lobby.getRoom(data.id);
+    if (!room.error) {
+      room.setRoundLabel(data.label);
+    }
+    callback({});
+  });
+
   socket.on('toggle voter', function (data, callback) {
     statsSocketMessagesReceived++;
     var room = lobby.getRoom(data.id);
