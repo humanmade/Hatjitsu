@@ -8,6 +8,7 @@ import { getSessionId, getStoredName, setStoredName, getStoredRole, setStoredRol
 import { useRoom } from '@/store/useRoom';
 import { Deck } from '@/components/Deck';
 import { Participants } from '@/components/Participants';
+import { RevealedVotes } from '@/components/RevealedVotes';
 import { Results } from '@/components/Results';
 import { RoomControls } from '@/components/RoomControls';
 import { History } from '@/components/History';
@@ -19,6 +20,9 @@ export function Room() {
   const sessionId = getSessionId();
   const [role, setRole] = useState<boolean | null>(() => getStoredRole());
   const roleRef = useRef<boolean | null>(getStoredRole());
+  // The server keeps votes anonymous and doesn't echo our own back, so we track it locally
+  // to highlight our pick in the deck before reveal.
+  const [myVote, setMyVote] = useState<string | null>(null);
 
   useEffect(() => {
     useRoom.getState().clear();
@@ -74,13 +78,17 @@ export function Room() {
 
   if (!room) return <p>Joining room…</p>;
   const me = room.connections.find((c) => c.sessionId === sessionId);
-  const pick = (vote: string) => socket.emit('vote', { slug, vote }, (res) => { if ('error' in res) toast.error(res.error); });
+  const pick = (vote: string) => {
+    setMyVote(vote);
+    socket.emit('vote', { slug, vote }, (res) => { if ('error' in res) toast.error(res.error); });
+  };
+  const myCurrentVote = me?.hasVoted ? myVote : null; // cleared when the round resets
 
   return (
-    <div className="flex flex-col items-center gap-10 py-4 text-center">
+    <div className="flex flex-col items-center gap-10 pt-12 pb-6 text-center">
       <h1 className="text-2xl font-bold tracking-tight">Room: {room.slug}</h1>
-      <Participants connections={room.connections} revealed={room.revealed} />
-      {me?.voter && <Deck cardPack={room.cardPack} myVote={me?.vote ?? null} onPick={pick} disabled={room.revealed} />}
+      {/* Top "table": who has voted while open; the anonymous results once revealed. */}
+      {room.revealed ? <RevealedVotes votes={room.votes} /> : <Participants connections={room.connections} />}
       <Results room={room} />
       {room.revealed && (
         <Button
@@ -90,6 +98,7 @@ export function Room() {
           Start new vote
         </Button>
       )}
+      {me?.voter && <Deck cardPack={room.cardPack} myVote={myCurrentVote} onPick={pick} disabled={room.revealed} />}
       <RoomControls room={room} sessionId={sessionId} />
       <History room={room} />
       <Fireworks room={room} />

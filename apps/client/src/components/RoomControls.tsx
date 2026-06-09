@@ -36,7 +36,7 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
         <>
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" />}>Deck: {room.cardPack}</DropdownMenuTrigger>
-            <DropdownMenuContent className="max-h-[60vh] w-72 overflow-y-auto">
+            <DropdownMenuContent className="w-72">
               {Object.keys(DECKS).map((name) => (
                 <DropdownMenuItem
                   key={name}

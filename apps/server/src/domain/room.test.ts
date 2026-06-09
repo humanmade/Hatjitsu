@@ -16,17 +16,21 @@ describe('Room domain', () => {
     expect(clientCount(s)).toBe(1);
   });
 
-  it('hides votes until everyone has voted, then reveals', () => {
+  it('hides votes until everyone has voted, then reveals them anonymously', () => {
     let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
     s = recordVote(s, 'a', '5');
     expect(votingFinished(s)).toBe(false);
-    expect(publicView(s).revealed).toBe(false);
-    expect(publicView(s).connections.find((c) => c.sessionId === 'a')!.vote).toBeNull();
-    expect(publicView(s).connections.find((c) => c.sessionId === 'a')!.hasVoted).toBe(true);
-    s = recordVote(s, 'b', '5');
+    let pv = publicView(s);
+    expect(pv.revealed).toBe(false);
+    expect(pv.votes).toEqual([]); // nothing revealed yet
+    expect(pv.connections.find((c) => c.sessionId === 'a')!.hasVoted).toBe(true);
+    expect(pv.connections[0]).not.toHaveProperty('vote'); // never attributed to a person
+    s = recordVote(s, 'b', '8');
+    pv = publicView(s);
     expect(votingFinished(s)).toBe(true);
-    expect(publicView(s).revealed).toBe(true);
-    expect(publicView(s).connections.find((c) => c.sessionId === 'a')!.vote).toBe('5');
+    expect(pv.revealed).toBe(true);
+    expect(pv.votes).toEqual(['5', '8']); // anonymous, sorted multiset
+    expect(pv.connections[0]).not.toHaveProperty('vote');
   });
 
   it('force reveal exposes votes immediately', () => {

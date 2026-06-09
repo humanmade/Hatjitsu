@@ -35,7 +35,7 @@ export interface PublicConnection {
   color: string;
   voter: boolean;
   hasVoted: boolean;
-  vote: Vote; // null unless the room is revealed
+  // Individual votes are intentionally NOT exposed per person — voting is anonymous.
 }
 
 export interface PublicRoom {
@@ -48,6 +48,8 @@ export interface PublicRoom {
   roundLabel: string;
   history: HistoryEntry[];
   connections: PublicConnection[];
+  /** Revealed votes, anonymised: sorted and decoupled from identity. Empty until revealed. */
+  votes: Vote[];
 }
 
 export type Ack = { ok: true } | { error: string };

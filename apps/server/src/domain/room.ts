@@ -136,13 +136,29 @@ export function isAdmin(s: RoomState, sessionId: string | undefined): boolean {
 
 export function publicView(s: RoomState): PublicRoom {
   const revealed = votingFinished(s);
+  const active = activeConnections(s);
+
+  // Anonymous reveal: a sorted multiset of votes, decoupled from who cast them.
+  // Sorting (not participant order) is what prevents positional re-identification.
+  const votes = revealed
+    ? active
+        .filter((c) => c.voter && c.vote !== null && c.vote !== undefined)
+        .map((c) => c.vote as Vote)
+        .sort((a, b) => {
+          const na = parseFloat(String(a));
+          const nb = parseFloat(String(b));
+          if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+          return String(a).localeCompare(String(b));
+        })
+    : [];
+
   return {
     slug: s.slug, mode: s.mode, adminSessionId: s.adminSessionId, cardPack: s.cardPack,
     forcedReveal: s.forcedReveal, revealed, roundLabel: s.roundLabel, history: s.history,
-    connections: activeConnections(s).map((c) => ({
+    votes,
+    connections: active.map((c) => ({
       sessionId: c.sessionId, name: c.name, color: c.color, voter: c.voter,
       hasVoted: c.vote !== null && c.vote !== undefined,
-      vote: revealed ? c.vote : null,
     })),
   };
 }

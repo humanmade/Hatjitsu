@@ -40,7 +40,8 @@ describe('socket handlers', () => {
       a.emit('vote', { slug: 'r', vote: '5' }, () => {});
     });
     expect(afterB.revealed).toBe(false);
-    expect(afterB.connections.find((c) => c.sessionId === 'sa')!.vote).toBeNull();
+    expect(afterB.votes).toEqual([]); // no votes exposed before reveal
+    expect(afterB.connections.find((c) => c.sessionId === 'sa')!.hasVoted).toBe(true);
     a.close(); b.close();
   });
 

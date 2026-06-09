@@ -19,9 +19,9 @@ function Stat({ label, value }: { label: string; value: number }) {
 
 export function Results({ room }: { room: PublicRoom }) {
   if (!room.revealed) return null;
-  const voters = room.connections.filter((c) => c.voter);
-  const votes = voters.filter((c) => c.vote !== null).map((c) => ({ vote: c.vote }));
-  const r = computeVoteResults(votes, voters.length, room.forcedReveal);
+  const voterCount = room.connections.filter((c) => c.voter).length;
+  // room.votes is the anonymous, de-identified multiset of revealed votes.
+  const r = computeVoteResults(room.votes.map((v) => ({ vote: v })), voterCount, room.forcedReveal);
 
   const hasNumbers = r.validVotes.length > 0; // averages only make sense for numeric decks
   const pill =

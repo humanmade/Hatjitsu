@@ -6,21 +6,23 @@ import type { PublicRoom } from '@hmpp/shared';
 const room = (over: Partial<PublicRoom>): PublicRoom => ({
   slug: 'r', mode: 'live', adminSessionId: 'a', cardPack: '135 set', forcedReveal: false,
   revealed: true, roundLabel: '', history: [],
+  votes: ['5', '5'],
   connections: [
-    { sessionId: 'a', name: 'A', color: 'red', voter: true, hasVoted: true, vote: '5' },
-    { sessionId: 'b', name: 'B', color: 'blue', voter: true, hasVoted: true, vote: '5' },
+    { sessionId: 'a', name: 'A', color: 'red', voter: true, hasVoted: true },
+    { sessionId: 'b', name: 'B', color: 'blue', voter: true, hasVoted: true },
   ],
   ...over,
 });
 
 describe('Results', () => {
-  it('shows the average when revealed', () => {
+  it('shows numeric stats when revealed', () => {
     render(<Results room={room({})} />);
     expect(screen.getByText(/Average/i)).toBeInTheDocument();
-    expect(screen.getByText('5')).toBeInTheDocument();
+    expect(screen.getByText('5')).toBeInTheDocument(); // average
+    expect(screen.getByText('10')).toBeInTheDocument(); // total
   });
-  it('renders nothing useful before reveal', () => {
-    const { container } = render(<Results room={room({ revealed: false })} />);
+  it('renders nothing before reveal', () => {
+    const { container } = render(<Results room={room({ revealed: false, votes: [] })} />);
     expect(container.textContent).not.toMatch(/Average/i);
   });
 });
