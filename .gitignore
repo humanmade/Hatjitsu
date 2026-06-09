@@ -5,5 +5,7 @@ dist
 coverage
 .playwright
 .e2e-data
+.devdata
+/data
 test-results
 playwright-report
