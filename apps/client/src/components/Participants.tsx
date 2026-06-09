@@ -8,6 +8,7 @@ export function Participants({ connections, revealed }: { connections: PublicCon
           <span
             className="h-12 w-12 rounded-md flex items-center justify-center text-white text-sm font-semibold"
             style={{ background: c.color, opacity: c.hasVoted || !c.voter ? 1 : 0.4 }}
+            title={c.voter ? c.name : `${c.name} (observer)`}
           >
             {revealed && c.voter ? (c.vote ?? '–') : c.voter ? (c.hasVoted ? '✓' : '…') : '👁'}
           </span>

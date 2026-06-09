@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +12,8 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
   const isAdmin = room.adminSessionId === sessionId;
   const me = room.connections.find((c) => c.sessionId === sessionId);
   const ack = (res: { ok: true } | { error: string }) => { if ('error' in res) toast.error(res.error); };
+  const [label, setLabel] = useState(room.roundLabel);
+  useEffect(() => { setLabel(room.roundLabel); }, [room.roundLabel]);
 
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -22,8 +25,10 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
 
       <Input
         className="w-56" placeholder="Round label (e.g. PROJ-123)"
-        defaultValue={room.roundLabel}
-        onBlur={(e) => socket.emit('round:label', { slug, label: e.target.value }, ack)}
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onBlur={() => { if (label !== room.roundLabel) socket.emit('round:label', { slug, label }, ack); }}
+        aria-label="Round label"
       />
 
       {isAdmin && (

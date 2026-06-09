@@ -17,8 +17,8 @@ export function History({ room }: { room: PublicRoom }) {
         <Button variant="outline" size="sm" onClick={exportJson}>Export JSON</Button>
       </div>
       <ul className="space-y-1 text-sm">
-        {room.history.map((h, i) => (
-          <li key={i}><span className="font-medium">{h.label}</span> — {h.votes.map((v) => String(v.vote)).join(', ')} <span className="opacity-60">({h.cardPack})</span></li>
+        {room.history.map((h) => (
+          <li key={h.timestamp}><span className="font-medium">{h.label}</span> — {h.votes.map((v) => String(v.vote)).join(', ')} <span className="opacity-60">({h.cardPack})</span></li>
         ))}
       </ul>
     </div>

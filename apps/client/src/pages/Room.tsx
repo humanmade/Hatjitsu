@@ -17,6 +17,7 @@ export function Room() {
   const sessionId = getSessionId();
 
   useEffect(() => {
+    useRoom.getState().clear();
     const onUpdate = (r: Parameters<typeof setRoom>[0]) => setRoom(r);
     socket.on('room:update', onUpdate);
     const doJoin = () => socket.emit('room:join', { slug, sessionId }, (res) => {
@@ -24,7 +25,11 @@ export function Room() {
     });
     if (socket.connected) doJoin();
     socket.on('connect', doJoin); // re-join on reconnect
-    return () => { socket.off('room:update', onUpdate); socket.off('connect', doJoin); };
+    return () => {
+      socket.off('room:update', onUpdate);
+      socket.off('connect', doJoin);
+      useRoom.getState().clear();
+    };
   }, [slug, sessionId, setRoom]);
 
   if (!room) return <p>Joining room…</p>;

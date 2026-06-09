@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { socket } from '@/lib/socket';
 
 export function NameEditor({ slug, currentName }: { slug: string; currentName: string }) {
   const [value, setValue] = useState(currentName);
+  useEffect(() => { setValue(currentName); }, [currentName]);
   return (
     <Input
       className="w-44" value={value} onChange={(e) => setValue(e.target.value)}
