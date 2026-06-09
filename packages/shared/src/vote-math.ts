@@ -1,4 +1,4 @@
-import type { Vote } from './types';
+import type { Vote } from './types.js';
 
 export type VoteStatus = 'unfinished' | 'unanimous' | 'not_unanimous' | 'problem';
 
