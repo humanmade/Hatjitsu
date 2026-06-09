@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { computeVoteResults, type PublicRoom } from '@hmpp/shared';
+import { Confetti } from './Confetti';
 
 export function Fireworks({ room }: { room: PublicRoom }) {
   const [show, setShow] = useState(false);
@@ -13,15 +14,11 @@ export function Fireworks({ room }: { room: PublicRoom }) {
     const { voteStatus } = computeVoteResults(votes, voters.length, room.forcedReveal);
     if (voteStatus === 'unanimous') {
       setShow(true);
-      const t = setTimeout(() => setShow(false), 2500);
+      const t = setTimeout(() => setShow(false), 4500);
       return () => clearTimeout(t);
     }
   }, [room.revealed, room.connections, room.forcedReveal]);
 
   if (!show) return null;
-  return (
-    <div className="pointer-events-none fixed inset-0 flex items-center justify-center" aria-hidden="true">
-      <div className="text-6xl animate-bounce motion-reduce:animate-none">🎉</div>
-    </div>
-  );
+  return <Confetti />;
 }

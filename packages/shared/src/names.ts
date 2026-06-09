@@ -37,7 +37,8 @@ export const FORBIDDEN: string[] = [
 ];
 
 const safeAdjectives = adjectives.filter((w) => !FORBIDDEN.includes(w));
-const safeNouns = animals.concat(JOKE_NAMES).filter((w) => !FORBIDDEN.includes(w));
+const safeAnimals = animals.filter((w) => !FORBIDDEN.includes(w));
+const safeNouns = safeAnimals.concat(JOKE_NAMES).filter((w) => !FORBIDDEN.includes(w));
 
 export function generateColor(): string {
   return uniqueNamesGenerator({ dictionaries: [COLOURS], length: 1 });
@@ -48,7 +49,7 @@ export function generateName(): string {
 }
 
 export function generateSlug(): string {
-  return uniqueNamesGenerator({ dictionaries: [adjectives, animals], separator: '-', length: 2 });
+  return uniqueNamesGenerator({ dictionaries: [safeAdjectives, safeAnimals], separator: '-', length: 2 });
 }
 
 /** Pure: returns `name` if not in `taken` (case-insensitive), else prepends a safe adjective. */

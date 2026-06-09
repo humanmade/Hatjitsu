@@ -11,7 +11,7 @@ export function History({ room }: { room: PublicRoom }) {
     URL.revokeObjectURL(url);
   };
   return (
-    <div className="rounded-md border p-4" style={{ borderColor: 'hsl(var(--border))' }}>
+    <div className="rounded-md border p-4">
       <div className="flex items-center justify-between mb-2">
         <h2 className="font-semibold">History</h2>
         <Button variant="outline" size="sm" onClick={exportJson}>Export JSON</Button>

@@ -6,31 +6,30 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222 22% 16%;
-    --card: 0 0% 98%;
-    --primary: 210 70% 26%;     /* HM brand primary — tune later */
-    --muted: 210 16% 93%;
-    --border: 214 20% 85%;
-    --radius: 0.5rem;
-  }
-  html.dark {
-    --background: 222 22% 11%;
-    --foreground: 210 20% 92%;
-    --card: 222 20% 16%;
-    --primary: 188 55% 53%;
-    --muted: 222 16% 22%;
-    --border: 222 16% 26%;
-  }
-  body { background: hsl(var(--background)); color: hsl(var(--foreground));
-    @apply bg-background text-foreground; }
+  body { @apply bg-background text-foreground; }
   * {
     @apply border-border outline-ring/50;
   }
   html {
     @apply font-sans;
   }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+}
+
+@keyframes hmpp-confetti-fall {
+  0%   { transform: translate3d(0, -12vh, 0) rotate(0deg); opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0), 112vh, 0) rotate(var(--spin, 540deg)); opacity: 0; }
+}
+.hmpp-confetti-piece { will-change: transform, opacity; }
+@media (prefers-reduced-motion: reduce) {
+  .hmpp-confetti-piece { display: none; }
 }
 
 @theme inline {
@@ -83,7 +82,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.55 0.19 25);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -118,8 +117,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.62 0.19 25);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);

@@ -1,10 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { FORBIDDEN, COLOURS, generateColor, generateName, uniquifyName } from './names';
+import { FORBIDDEN, COLOURS, generateColor, generateName, generateSlug, uniquifyName } from './names';
 
 describe('names', () => {
   it('never emits a forbidden word from generateName', () => {
     for (let i = 0; i < 200; i++) {
       const parts = generateName().toLowerCase().split(' ');
+      for (const p of parts) expect(FORBIDDEN).not.toContain(p);
+    }
+  });
+  it('never emits a forbidden word from generateSlug (room URLs)', () => {
+    for (let i = 0; i < 200; i++) {
+      const parts = generateSlug().toLowerCase().split('-');
       for (const p of parts) expect(FORBIDDEN).not.toContain(p);
     }
   });

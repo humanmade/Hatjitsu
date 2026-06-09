@@ -6,7 +6,7 @@ import { Room } from './pages/Room';
 export default function App() {
   return (
     <div className="min-h-screen">
-      <header className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'hsl(var(--border))' }}>
+      <header className="flex items-center justify-between p-4">
         <a href="/" className="font-semibold">HM Planning Poker</a>
         <ThemeToggle />
       </header>
