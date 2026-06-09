@@ -11,7 +11,10 @@ export function Participants({ connections }: { connections: PublicConnection[] 
         // Cards never show the value — only whether this person has voted. Anonymity is
         // about identity↔value: the values appear de-identified in the results, not here.
         return (
-          <li key={c.sessionId} className="flex w-20 flex-col items-center gap-2 sm:w-24">
+          <li
+            key={c.sessionId}
+            className="flex w-20 flex-col items-center gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-300 sm:w-24"
+          >
             <div
               className={cn(
                 'grid aspect-[5/7] w-full place-items-center rounded-xl border-2 shadow-sm',
@@ -23,7 +26,7 @@ export function Participants({ connections }: { connections: PublicConnection[] 
               title={c.voter ? c.name : `${c.name} (observer)`}
             >
               {voted ? (
-                <Check className="size-8" />
+                <Check className="size-8 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-200" />
               ) : !c.voter ? (
                 <Eye className="size-5" />
               ) : (

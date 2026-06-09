@@ -13,6 +13,7 @@ import { Results } from '@/components/Results';
 import { RoomControls } from '@/components/RoomControls';
 import { History } from '@/components/History';
 import { Fireworks } from '@/components/Fireworks';
+import { computeVoteResults } from '@hmpp/shared';
 
 export function Room() {
   const { slug = '' } = useParams();
@@ -84,12 +85,24 @@ export function Room() {
   };
   const myCurrentVote = me?.hasVoted ? myVote : null; // cleared when the round resets
 
+  const revealHighlight = room.revealed
+    ? (() => {
+        const voterCount = room.connections.filter((c) => c.voter).length;
+        const st = computeVoteResults(room.votes.map((v) => ({ vote: v })), voterCount, room.forcedReveal).voteStatus;
+        return st === 'unanimous' ? 'unanimous' : st === 'problem' ? 'problem' : null;
+      })()
+    : null;
+
   return (
     <div className="flex flex-col items-center gap-10 pt-12 pb-6 text-center">
       <h1 className="text-2xl font-bold tracking-tight">Room: {room.slug}</h1>
       {/* Top "table": who has voted while open; the anonymous results once revealed. */}
       <div className="py-12">
-        {room.revealed ? <RevealedVotes votes={room.votes} /> : <Participants connections={room.connections} />}
+        {room.revealed ? (
+          <RevealedVotes votes={room.votes} highlight={revealHighlight} />
+        ) : (
+          <Participants connections={room.connections} />
+        )}
       </div>
       <Results room={room} />
       {room.revealed && (

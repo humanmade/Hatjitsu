@@ -1,5 +1,25 @@
+import { useEffect, useState } from 'react';
 import { computeVoteResults, type PublicRoom, type VoteStatus } from '@hmpp/shared';
 import { cn } from '@/lib/utils';
+
+/** Counts up from 0 to `target` on mount. Instant when reduced-motion (or no matchMedia, e.g. tests). */
+function useCountUp(target: number, duration = 600): number {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const reduce = !window.matchMedia || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { setVal(target); return; }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      setVal(Math.round(target * (1 - Math.pow(1 - t, 3))));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return val;
+}
 
 const STATUS_LABEL: Record<VoteStatus, string> = {
   unanimous: 'Unanimous',
@@ -9,9 +29,10 @@ const STATUS_LABEL: Record<VoteStatus, string> = {
 };
 
 function Stat({ label, value }: { label: string; value: number }) {
+  const shown = useCountUp(value);
   return (
     <div className="flex flex-col items-center">
-      <span className="text-4xl font-bold leading-none tabular-nums">{value}</span>
+      <span className="text-4xl font-bold leading-none tabular-nums">{shown}</span>
       <span className="mt-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</span>
     </div>
   );

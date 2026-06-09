@@ -13,6 +13,7 @@ export function Card({ value, selected, disabled, onClick }: {
       className={cn(
         'relative grid aspect-[5/7] w-20 place-items-center rounded-xl border-2 bg-card text-card-foreground shadow-sm transition-transform duration-200 ease-out sm:w-24',
         'hover:-translate-y-1.5 focus-visible:-translate-y-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        'motion-safe:active:scale-95',
         'disabled:pointer-events-none disabled:opacity-45',
         selected
           ? 'border-primary bg-primary text-primary-foreground shadow-md'
