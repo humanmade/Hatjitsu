@@ -18,7 +18,7 @@ await page.waitForTimeout(500);
 await page.screenshot({ path: '/tmp/hmpp-room.png' });
 
 // Single voter -> voting finishes -> reveal + results + confetti
-await page.getByRole('button', { name: '5', exact: true }).click();
+await page.getByRole('button', { name: 'Vote 5', exact: true }).click();
 await page.waitForTimeout(700);
 await page.screenshot({ path: '/tmp/hmpp-room-revealed.png' });
 

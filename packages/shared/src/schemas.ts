@@ -5,7 +5,9 @@ const slug = z.string().min(1).max(100);
 export const joinSchema = z.object({
   slug,
   sessionId: z.string().min(1).max(100),
-  name: z.string().max(50).transform((s) => s.trim()).optional(),
+  // Restored/generated names can be long (the curated joke list has a 111-char name),
+  // so the join cap is generous; manual renames stay capped at 50 via nameSchema.
+  name: z.string().max(120).transform((s) => s.trim()).optional(),
   voter: z.boolean().optional(),
 });
 export const slugOnlySchema = z.object({ slug });

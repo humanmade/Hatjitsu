@@ -77,11 +77,19 @@ export function Room() {
   const pick = (vote: string) => socket.emit('vote', { slug, vote }, (res) => { if ('error' in res) toast.error(res.error); });
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-xl font-semibold">Room: {room.slug}</h1>
+    <div className="flex flex-col items-center gap-10 py-4 text-center">
+      <h1 className="text-2xl font-bold tracking-tight">Room: {room.slug}</h1>
       <Participants connections={room.connections} revealed={room.revealed} />
       {me?.voter && <Deck cardPack={room.cardPack} myVote={me?.vote ?? null} onPick={pick} disabled={room.revealed} />}
       <Results room={room} />
+      {room.revealed && (
+        <Button
+          size="lg"
+          onClick={() => socket.emit('vote:reset', { slug }, (res) => { if ('error' in res) toast.error(res.error); })}
+        >
+          Start new vote
+        </Button>
+      )}
       <RoomControls room={room} sessionId={sessionId} />
       <History room={room} />
       <Fireworks room={room} />

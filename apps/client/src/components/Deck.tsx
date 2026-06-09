@@ -6,7 +6,7 @@ export function Deck({ cardPack, myVote, onPick, disabled }: {
 }) {
   const cards = chooseCardPack(cardPack);
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
       {cards.map((c) => (
         <Card key={String(c)} value={c} selected={String(myVote) === String(c)} disabled={disabled} onClick={() => onPick(String(c))} />
       ))}

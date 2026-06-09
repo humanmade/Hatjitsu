@@ -12,6 +12,16 @@ export function createApp(): Express {
   app.get('/healthz', (_req, res) => { res.type('text').send('ok'); });
   app.use(express.static(CLIENT_DIR, { maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0 }));
   // SPA fallback: any non-asset, non-socket route returns index.html
-  app.get(/^(?!\/socket\.io).*/, (_req, res) => { res.sendFile(path.join(CLIENT_DIR, 'index.html')); });
+  app.get(/^(?!\/socket\.io).*/, (_req, res) => {
+    res.sendFile(path.join(CLIENT_DIR, 'index.html'), (err) => {
+      if (err && !res.headersSent) {
+        // No built client (e.g. dev mode): the SPA is served by Vite, not this server.
+        res
+          .status(503)
+          .type('text')
+          .send('Client build not found. In development, open the Vite dev server (http://localhost:5173).');
+      }
+    });
+  });
   return app;
 }
