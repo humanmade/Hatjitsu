@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createRoom, enter, leave, recordVote, clearVote, resetVotes,
-  forceReveal, toggleVoter, isAdmin, votingFinished, clientCount, publicView,
+  forceReveal, toggleVoter, setCardPack, isAdmin, votingFinished, clientCount, publicView,
 } from './room';
 
 const join = (state: ReturnType<typeof createRoom>, sessionId: string, socketId: string, voter = true) =>
@@ -31,6 +31,14 @@ describe('Room domain', () => {
     expect(pv.revealed).toBe(true);
     expect(pv.votes).toEqual(['5', '8']); // anonymous, sorted multiset
     expect(pv.connections[0]).not.toHaveProperty('vote');
+  });
+
+  it('changing the card pack clears the current votes and reveal', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = recordVote(s, 'a', 'banana'); s = forceReveal(s);
+    s = setCardPack(s, 'Fibonacci');
+    expect(s.cardPack).toBe('Fibonacci');
+    expect(s.connections['a'].vote).toBeNull();
+    expect(s.forcedReveal).toBe(false);
   });
 
   it('force reveal exposes votes immediately', () => {

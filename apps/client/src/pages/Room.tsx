@@ -88,7 +88,7 @@ export function Room() {
     <div className="flex flex-col items-center gap-10 pt-12 pb-6 text-center">
       <h1 className="text-2xl font-bold tracking-tight">Room: {room.slug}</h1>
       {/* Top "table": who has voted while open; the anonymous results once revealed. */}
-      <div className="py-6">
+      <div className="py-12">
         {room.revealed ? <RevealedVotes votes={room.votes} /> : <Participants connections={room.connections} />}
       </div>
       <Results room={room} />

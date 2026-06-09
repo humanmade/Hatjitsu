@@ -112,7 +112,13 @@ export function setName(s: RoomState, sessionId: string, name: string): RoomStat
 }
 
 export function setCardPack(s: RoomState, cardPack: string): RoomState {
-  const next = clone(s); next.cardPack = cardPack; return next;
+  const next = clone(s);
+  next.cardPack = cardPack;
+  // A new deck invalidates the current votes (e.g. a "banana" vote can't carry into a
+  // numeric deck), so changing the pack clears the round.
+  for (const c of Object.values(next.connections)) c.vote = null;
+  next.forcedReveal = false;
+  return next;
 }
 
 export function setRoundLabel(s: RoomState, label: string): RoomState {
