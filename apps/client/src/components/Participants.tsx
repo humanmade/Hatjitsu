@@ -21,9 +21,10 @@ export function Participants({ connections }: { connections: PublicConnection[] 
                 'motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out',
                 'hover:shadow-lg motion-safe:hover:-translate-y-1.5 motion-safe:hover:scale-[1.03]',
                 !c.voter && 'opacity-60',
+                !c.connected && 'opacity-45', // away: tab closed, kept in the roster
               )}
               style={voted ? { background: c.color, borderColor: c.color, color: '#fff' } : { borderColor: c.color, color: c.color }}
-              title={c.voter ? c.name : `${c.name} (observer)`}
+              title={`${c.name}${c.voter ? '' : ' (observer)'}${c.connected ? '' : ' (away)'}`}
             >
               {voted ? (
                 <Check className="size-8 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-200" />

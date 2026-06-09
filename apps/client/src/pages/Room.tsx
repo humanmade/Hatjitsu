@@ -37,8 +37,9 @@ export function Room() {
     const doJoin = () => {
       if (roleRef.current === null) return;
       socket.emit('room:join', { slug, sessionId, voter: roleRef.current, name: getStoredName() }, (res) => {
-        if ('error' in res) toast.error(res.error);
-        else remember(res);
+        if ('error' in res) { toast.error(res.error); return; }
+        remember(res);
+        setMyVote(res.yourVote != null ? String(res.yourVote) : null); // restore own highlight
       });
     };
     if (socket.connected) doJoin();
@@ -55,12 +56,11 @@ export function Room() {
     roleRef.current = voter;
     setRole(voter);
     socket.emit('room:join', { slug, sessionId, voter, name: getStoredName() }, (res) => {
-      if ('error' in res) toast.error(res.error);
-      else {
-        setRoom(res);
-        const mine = res.connections.find((c) => c.sessionId === sessionId);
-        if (mine) setStoredName(mine.name);
-      }
+      if ('error' in res) { toast.error(res.error); return; }
+      setRoom(res);
+      const mine = res.connections.find((c) => c.sessionId === sessionId);
+      if (mine) setStoredName(mine.name);
+      setMyVote(res.yourVote != null ? String(res.yourVote) : null);
     });
   };
 

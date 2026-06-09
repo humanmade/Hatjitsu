@@ -1,9 +1,9 @@
-import type { PublicRoom, Ack } from './types.js';
-import type { JoinPayload, VotePayload, CardPackPayload, NamePayload, LabelPayload, TogglePayload } from './schemas.js';
+import type { PublicRoom, JoinResult, Ack } from './types.js';
+import type { JoinPayload, VotePayload, CardPackPayload, NamePayload, LabelPayload, TogglePayload, EjectPayload } from './schemas.js';
 
 export interface ClientToServerEvents {
   'room:create': (cb: (res: { slug: string }) => void) => void;
-  'room:join': (data: JoinPayload, cb: (res: PublicRoom | { error: string }) => void) => void;
+  'room:join': (data: JoinPayload, cb: (res: JoinResult | { error: string }) => void) => void;
   'room:info': (data: { slug: string }, cb: (res: PublicRoom | { error: string }) => void) => void;
   'vote': (data: VotePayload, cb: (res: Ack) => void) => void;
   'unvote': (data: { slug: string }, cb: (res: Ack) => void) => void;
@@ -13,6 +13,7 @@ export interface ClientToServerEvents {
   'round:label': (data: LabelPayload, cb: (res: Ack) => void) => void;
   'voter:toggle': (data: TogglePayload, cb: (res: Ack) => void) => void;
   'cardpack:set': (data: CardPackPayload, cb: (res: Ack) => void) => void;
+  'eject:set': (data: EjectPayload, cb: (res: Ack) => void) => void;
 }
 
 export interface ServerToClientEvents {

@@ -9,6 +9,7 @@ export function createRoom(slug: string): RoomState {
   return {
     slug, mode: 'live', createdAt: Date.now(), adminSessionId: null,
     cardPack: '135 set', forcedReveal: false, roundLabel: '', history: [], connections: {},
+    ejectOnLeave: true,
   };
 }
 
@@ -42,13 +43,15 @@ export function enter(
   return next;
 }
 
-export function leave(s: RoomState, socketId: string): RoomState {
+export function leave(s: RoomState, socketId: string, ejectOnLeave = true): RoomState {
   const next = clone(s);
   const conn = Object.values(next.connections).find((c) => c.socketIds.includes(socketId));
   if (!conn) return next;
   conn.socketIds = conn.socketIds.filter((id) => id !== socketId);
   if (conn.socketIds.length === 0) {
-    delete next.connections[conn.sessionId];
+    // Eject: drop them from the roster. Keep: retain them as a disconnected participant.
+    if (ejectOnLeave) delete next.connections[conn.sessionId];
+    // Either way, hand admin to a still-connected participant if the admin just left.
     if (next.adminSessionId === conn.sessionId) {
       const nextAdmin = activeConnections(next)[0];
       next.adminSessionId = nextAdmin ? nextAdmin.sessionId : null;
@@ -125,6 +128,10 @@ export function setRoundLabel(s: RoomState, label: string): RoomState {
   const next = clone(s); next.roundLabel = label; return next;
 }
 
+export function setEjectOnLeave(s: RoomState, ejectOnLeave: boolean): RoomState {
+  const next = clone(s); next.ejectOnLeave = ejectOnLeave; return next;
+}
+
 export function votingFinished(s: RoomState): boolean {
   if (s.forcedReveal) return true;
   const voters = activeConnections(s).filter((c) => c.voter);
@@ -142,12 +149,12 @@ export function isAdmin(s: RoomState, sessionId: string | undefined): boolean {
 
 export function publicView(s: RoomState): PublicRoom {
   const revealed = votingFinished(s);
-  const active = activeConnections(s);
+  const roster = Object.values(s.connections); // includes kept-but-disconnected participants
 
   // Anonymous reveal: a sorted multiset of votes, decoupled from who cast them.
   // Sorting (not participant order) is what prevents positional re-identification.
   const votes = revealed
-    ? active
+    ? roster
         .filter((c) => c.voter && c.vote !== null && c.vote !== undefined)
         .map((c) => c.vote as Vote)
         .sort((a, b) => {
@@ -161,10 +168,11 @@ export function publicView(s: RoomState): PublicRoom {
   return {
     slug: s.slug, mode: s.mode, adminSessionId: s.adminSessionId, cardPack: s.cardPack,
     forcedReveal: s.forcedReveal, revealed, roundLabel: s.roundLabel, history: s.history,
-    votes,
-    connections: active.map((c) => ({
+    votes, ejectOnLeave: s.ejectOnLeave,
+    connections: roster.map((c) => ({
       sessionId: c.sessionId, name: c.name, color: c.color, voter: c.voter,
       hasVoted: c.vote !== null && c.vote !== undefined,
+      connected: c.socketIds.length > 0,
     })),
   };
 }

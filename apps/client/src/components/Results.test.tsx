@@ -5,11 +5,11 @@ import type { PublicRoom } from '@hmpp/shared';
 
 const room = (over: Partial<PublicRoom>): PublicRoom => ({
   slug: 'r', mode: 'live', adminSessionId: 'a', cardPack: '135 set', forcedReveal: false,
-  revealed: true, roundLabel: '', history: [],
+  revealed: true, roundLabel: '', history: [], ejectOnLeave: true,
   votes: ['5', '5'],
   connections: [
-    { sessionId: 'a', name: 'A', color: 'red', voter: true, hasVoted: true },
-    { sessionId: 'b', name: 'B', color: 'blue', voter: true, hasVoted: true },
+    { sessionId: 'a', name: 'A', color: 'red', voter: true, hasVoted: true, connected: true },
+    { sessionId: 'b', name: 'B', color: 'blue', voter: true, hasVoted: true, connected: true },
   ],
   ...over,
 });

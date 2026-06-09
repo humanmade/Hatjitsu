@@ -54,6 +54,14 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
           </DropdownMenu>
           <Button onClick={() => socket.emit('reveal:force', { slug }, ack)} disabled={room.revealed}>Reveal</Button>
           <Button variant="destructive" onClick={() => socket.emit('vote:reset', { slug }, ack)}>Reset</Button>
+          <Button
+            variant={room.ejectOnLeave ? 'outline' : 'default'}
+            aria-pressed={!room.ejectOnLeave}
+            onClick={() => socket.emit('eject:set', { slug, ejectOnLeave: !room.ejectOnLeave }, ack)}
+            title="On: people who close their tab stay in the room (async). Off: they're removed when they leave (sync)."
+          >
+            Keep absent voters
+          </Button>
         </>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createRoom, enter, leave, recordVote, clearVote, resetVotes,
-  forceReveal, toggleVoter, setCardPack, isAdmin, votingFinished, clientCount, publicView,
+  forceReveal, toggleVoter, setCardPack, setEjectOnLeave, isAdmin, votingFinished, clientCount, publicView,
 } from './room';
 
 const join = (state: ReturnType<typeof createRoom>, sessionId: string, socketId: string, voter = true) =>
@@ -77,5 +77,21 @@ describe('Room domain', () => {
     expect(clientCount(s)).toBe(1);
     s = leave(s, 'sa2');
     expect(clientCount(s)).toBe(0);
+  });
+
+  it('ejects a participant when their last tab closes (eject mode, default)', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = leave(s, 'sb', true);
+    expect(s.connections['b']).toBeUndefined();
+    expect(clientCount(s)).toBe(1);
+  });
+
+  it('keeps a disconnected participant in the roster (keep mode)', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = setEjectOnLeave(s, false);
+    s = leave(s, 'sb', false);
+    expect(s.connections['b']).toBeDefined();
+    expect(clientCount(s)).toBe(1); // away voters aren't counted as present
+    expect(publicView(s).connections.find((c) => c.sessionId === 'b')!.connected).toBe(false);
   });
 });

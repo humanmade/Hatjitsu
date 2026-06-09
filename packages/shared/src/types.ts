@@ -27,6 +27,8 @@ export interface RoomState {
   roundLabel: string;
   history: HistoryEntry[];
   connections: Record<string, Connection>; // keyed by sessionId
+  /** true: drop a participant when their last tab closes (sync). false: keep them (async). */
+  ejectOnLeave: boolean;
 }
 
 export interface PublicConnection {
@@ -35,6 +37,7 @@ export interface PublicConnection {
   color: string;
   voter: boolean;
   hasVoted: boolean;
+  connected: boolean; // false = present in the roster but their tab is closed (keep mode)
   // Individual votes are intentionally NOT exposed per person — voting is anonymous.
 }
 
@@ -50,6 +53,11 @@ export interface PublicRoom {
   connections: PublicConnection[];
   /** Revealed votes, anonymised: sorted and decoupled from identity. Empty until revealed. */
   votes: Vote[];
+  ejectOnLeave: boolean;
 }
 
 export type Ack = { ok: true } | { error: string };
+
+/** The room:join ack: the public room plus the joiner's OWN vote (sent only to them, so
+ * anonymity holds), letting a returning tab restore its highlighted selection. */
+export type JoinResult = PublicRoom & { yourVote: Vote };

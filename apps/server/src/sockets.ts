@@ -1,7 +1,7 @@
 import type { Server, Socket } from 'socket.io';
 import {
   type ClientToServerEvents, type ServerToClientEvents, type SocketData, type Ack,
-  joinSchema, slugOnlySchema, voteSchema, cardPackSchema, nameSchema, labelSchema, toggleSchema,
+  joinSchema, slugOnlySchema, voteSchema, cardPackSchema, nameSchema, labelSchema, toggleSchema, ejectSchema,
   generateSlug,
 } from '@hmpp/shared';
 import { RoomStore } from './store/roomStore.js';
@@ -36,7 +36,10 @@ export function registerHandlers(io: IO, store: RoomStore): void {
       socket.data.slug = slug;
       await socket.join(slug);
       socket.to(slug).emit('room:update', room.publicView(state));
-      cb(room.publicView(state));
+      // yourVote is sent only in this caller's ack (never broadcast), so anonymity holds
+      // while letting a returning tab restore its own highlighted selection.
+      const yourVote = state.connections[sessionId]?.vote ?? null;
+      cb({ ...room.publicView(state), yourVote });
     });
 
     socket.on('room:info', async (data, cb) => {
@@ -119,13 +122,23 @@ export function registerHandlers(io: IO, store: RoomStore): void {
       });
     });
 
+    socket.on('eject:set', (data, cb) => {
+      const p = ejectSchema.safeParse(data);
+      if (!p.success) return cb({ error: 'Invalid payload' });
+      mutate(p.data.slug, cb, (s) =>
+        room.isAdmin(s, socket.data.sessionId)
+          ? room.setEjectOnLeave(s, p.data.ejectOnLeave)
+          : { error: 'Only the room admin can change this' });
+    });
+
     socket.on('disconnecting', async () => {
       const slug = socket.data.slug;
       if (!slug) return;
       const state = await store.load(slug);
       if (!state) return;
-      const next = room.leave(state, socket.id);
-      if (room.clientCount(next) === 0) await store.delete(slug);
+      const next = room.leave(state, socket.id, state.ejectOnLeave);
+      // Eject mode tidies up empty rooms immediately; keep mode lets them persist (TTL).
+      if (state.ejectOnLeave && room.clientCount(next) === 0) await store.delete(slug);
       else { await store.save(next); io.to(slug).emit('room:update', room.publicView(next)); }
       logger.debug('socket disconnecting', { id: socket.id, slug });
     });
