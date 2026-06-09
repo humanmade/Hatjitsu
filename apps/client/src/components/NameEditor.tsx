@@ -9,7 +9,7 @@ export function NameEditor({ slug, currentName, color }: { slug: string; current
   return (
     <Input
       className="w-44 font-medium"
-      style={color ? { color } : undefined}
+      style={color ? { color: `color-mix(in oklab, ${color}, var(--foreground) 40%)` } : undefined}
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onBlur={() => value && value !== currentName && socket.emit('name:set', { slug, name: value }, (res) => { if ('error' in res) toast.error(res.error); })}

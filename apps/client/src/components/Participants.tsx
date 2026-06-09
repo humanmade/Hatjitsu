@@ -22,7 +22,12 @@ export function Participants({ connections }: { connections: PublicConnection[] 
             >
               {voted ? <Check className="size-8" /> : !c.voter ? <Eye className="size-5" /> : null}
             </div>
-            <span className="max-w-full truncate text-sm font-medium" style={{ color: c.color }}>
+            <span
+              className="max-w-full truncate text-sm font-medium"
+              // Keep the player's hue but guarantee contrast: blend toward the theme's
+              // foreground (lightens dark colours in dark mode, darkens light ones in light mode).
+              style={{ color: `color-mix(in oklab, ${c.color}, var(--foreground) 40%)` }}
+            >
               {c.name}
             </span>
           </li>
