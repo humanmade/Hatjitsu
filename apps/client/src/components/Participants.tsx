@@ -15,7 +15,6 @@ export function Participants({ connections }: { connections: PublicConnection[] 
             <div
               className={cn(
                 'grid aspect-[5/7] w-full place-items-center rounded-xl border-2 shadow-sm transition-colors',
-                !voted && 'border-dashed',
                 !c.voter && 'opacity-60',
               )}
               style={voted ? { background: c.color, borderColor: c.color, color: '#fff' } : { borderColor: c.color, color: c.color }}
