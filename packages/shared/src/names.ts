@@ -44,6 +44,13 @@ export function generateColor(): string {
   return uniqueNamesGenerator({ dictionaries: [COLOURS], length: 1 });
 }
 
+/** Deterministic colour for a session id, so a returning user keeps the same colour. */
+export function colorForSession(sessionId: string): string {
+  let h = 0;
+  for (let i = 0; i < sessionId.length; i++) h = (h * 31 + sessionId.charCodeAt(i)) >>> 0;
+  return COLOURS[h % COLOURS.length];
+}
+
 export function generateName(): string {
   return uniqueNamesGenerator({ dictionaries: [safeAdjectives, safeNouns], separator: ' ', length: 2 });
 }

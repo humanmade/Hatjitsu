@@ -1,6 +1,6 @@
 import {
   type RoomState, type Connection, type PublicRoom, type Vote,
-  generateColor, generateName, uniquifyName,
+  colorForSession, generateName, uniquifyName,
 } from '@hmpp/shared';
 
 const clone = (s: RoomState): RoomState => structuredClone(s);
@@ -32,7 +32,7 @@ export function enter(
     next.connections[opts.sessionId] = {
       sessionId: opts.sessionId,
       name: uniquifyName(proposed, takenNames(next, opts.sessionId)),
-      color: generateColor(),
+      color: colorForSession(opts.sessionId),
       voter: opts.voter !== undefined ? opts.voter : true,
       vote: null,
       socketIds: [opts.socketId],

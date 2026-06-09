@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { socket } from '@/lib/socket';
-import { getSessionId } from '@/lib/session';
+import { getSessionId, getStoredName, setStoredName, getStoredRole, setStoredRole } from '@/lib/session';
 import { useRoom } from '@/store/useRoom';
 import { Deck } from '@/components/Deck';
 import { Participants } from '@/components/Participants';
@@ -17,35 +17,45 @@ export function Room() {
   const { slug = '' } = useParams();
   const { room, setRoom } = useRoom();
   const sessionId = getSessionId();
-  const [role, setRole] = useState<boolean | null>(null);
-  const roleRef = useRef<boolean | null>(null);
+  const [role, setRole] = useState<boolean | null>(() => getStoredRole());
+  const roleRef = useRef<boolean | null>(getStoredRole());
 
   useEffect(() => {
     useRoom.getState().clear();
-    const onUpdate = (r: Parameters<typeof setRoom>[0]) => setRoom(r);
-    socket.on('room:update', onUpdate);
-    // Re-join with the chosen role on (re)connect.
+    const remember = (r: Parameters<typeof setRoom>[0]) => {
+      setRoom(r);
+      const mine = r.connections.find((c) => c.sessionId === sessionId);
+      if (mine) setStoredName(mine.name); // keep our (possibly uniquified) name across refreshes
+    };
+    socket.on('room:update', remember);
+    // Join, or re-join on (re)connect, with the remembered role + name.
     const doJoin = () => {
       if (roleRef.current === null) return;
-      socket.emit('room:join', { slug, sessionId, voter: roleRef.current }, (res) => {
+      socket.emit('room:join', { slug, sessionId, voter: roleRef.current, name: getStoredName() }, (res) => {
         if ('error' in res) toast.error(res.error);
-        else setRoom(res);
+        else remember(res);
       });
     };
+    if (socket.connected) doJoin();
     socket.on('connect', doJoin);
     return () => {
-      socket.off('room:update', onUpdate);
+      socket.off('room:update', remember);
       socket.off('connect', doJoin);
       useRoom.getState().clear();
     };
   }, [slug, sessionId, setRoom]);
 
   const join = (voter: boolean) => {
+    setStoredRole(voter);
     roleRef.current = voter;
     setRole(voter);
-    socket.emit('room:join', { slug, sessionId, voter }, (res) => {
+    socket.emit('room:join', { slug, sessionId, voter, name: getStoredName() }, (res) => {
       if ('error' in res) toast.error(res.error);
-      else setRoom(res);
+      else {
+        setRoom(res);
+        const mine = res.connections.find((c) => c.sessionId === sessionId);
+        if (mine) setStoredName(mine.name);
+      }
     });
   };
 

@@ -1,9 +1,10 @@
 import { chromium } from '@playwright/test';
 
+const BASE = process.env.BASE_URL || 'http://localhost:5173';
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1100, height: 760 } });
 
-await page.goto('http://localhost:5099/');
+await page.goto(BASE + '/');
 await page.waitForLoadState('networkidle');
 await page.screenshot({ path: '/tmp/hmpp-lobby.png' });
 
