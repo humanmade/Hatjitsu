@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // In the built image the client is copied next to the server dist as ./public
-const CLIENT_DIR = process.env.CLIENT_DIR || path.join(__dirname, 'public');
+// Resolve relative paths against cwd so res.sendFile (which requires absolute) always gets an absolute path.
+const CLIENT_DIR = path.resolve(process.env.CLIENT_DIR || path.join(__dirname, 'public'));
 
 export function createApp(): Express {
   const app = express();

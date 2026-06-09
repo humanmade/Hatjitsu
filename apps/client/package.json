@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -30,6 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.1.11",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
