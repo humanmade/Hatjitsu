@@ -54,14 +54,30 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
           </DropdownMenu>
           <Button onClick={() => socket.emit('reveal:force', { slug }, ack)} disabled={room.revealed}>Reveal</Button>
           <Button variant="destructive" onClick={() => socket.emit('vote:reset', { slug }, ack)}>Reset</Button>
-          <Button
-            variant={room.ejectOnLeave ? 'outline' : 'default'}
-            aria-pressed={!room.ejectOnLeave}
-            onClick={() => socket.emit('eject:set', { slug, ejectOnLeave: !room.ejectOnLeave }, ack)}
-            title="On: people who close their tab stay in the room (async). Off: they're removed when they leave (sync)."
+          <div
+            className="flex items-center gap-1 rounded-md border p-1"
+            role="group"
+            aria-label="What happens when a voter leaves"
+            title="Eject: remove people when they close their tab (sync). Keep: keep them in the room so they can return (async)."
           >
-            Keep absent voters
-          </Button>
+            <span className="px-1.5 text-xs font-medium text-muted-foreground">On leave</span>
+            <Button
+              size="sm"
+              variant={room.ejectOnLeave ? 'default' : 'ghost'}
+              aria-pressed={room.ejectOnLeave}
+              onClick={() => !room.ejectOnLeave && socket.emit('eject:set', { slug, ejectOnLeave: true }, ack)}
+            >
+              Eject
+            </Button>
+            <Button
+              size="sm"
+              variant={!room.ejectOnLeave ? 'default' : 'ghost'}
+              aria-pressed={!room.ejectOnLeave}
+              onClick={() => room.ejectOnLeave && socket.emit('eject:set', { slug, ejectOnLeave: false }, ack)}
+            >
+              Keep
+            </Button>
+          </div>
         </>
       )}
     </div>
