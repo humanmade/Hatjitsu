@@ -129,7 +129,31 @@ export function setRoundLabel(s: RoomState, label: string): RoomState {
 }
 
 export function setEjectOnLeave(s: RoomState, ejectOnLeave: boolean): RoomState {
-  const next = clone(s); next.ejectOnLeave = ejectOnLeave; return next;
+  const next = clone(s);
+  next.ejectOnLeave = ejectOnLeave;
+  if (ejectOnLeave) {
+    // Switching to eject also clears anyone who's currently absent (no live sockets).
+    for (const [sid, c] of Object.entries(next.connections)) {
+      if (c.socketIds.length === 0) delete next.connections[sid];
+    }
+    if (next.adminSessionId && !next.connections[next.adminSessionId]) {
+      const nextAdmin = activeConnections(next)[0];
+      next.adminSessionId = nextAdmin ? nextAdmin.sessionId : null;
+    }
+  }
+  return next;
+}
+
+/** Drop process-local socket ids (stale after a restart) and, in eject rooms, the now-empty
+ * roster. Run once at boot so a returning client doesn't leave a phantom behind. */
+export function purgeStalePresence(s: RoomState): RoomState {
+  const next = clone(s);
+  for (const c of Object.values(next.connections)) c.socketIds = [];
+  if (next.ejectOnLeave) {
+    next.connections = {};
+    next.adminSessionId = null;
+  }
+  return next;
 }
 
 export function votingFinished(s: RoomState): boolean {

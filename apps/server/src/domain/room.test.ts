@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   createRoom, enter, leave, recordVote, clearVote, resetVotes,
-  forceReveal, toggleVoter, setCardPack, setEjectOnLeave, isAdmin, votingFinished, clientCount, publicView,
+  forceReveal, toggleVoter, setCardPack, setEjectOnLeave, purgeStalePresence,
+  isAdmin, votingFinished, clientCount, publicView,
 } from './room';
 
 const join = (state: ReturnType<typeof createRoom>, sessionId: string, socketId: string, voter = true) =>
@@ -93,5 +94,25 @@ describe('Room domain', () => {
     expect(s.connections['b']).toBeDefined();
     expect(clientCount(s)).toBe(1); // away voters aren't counted as present
     expect(publicView(s).connections.find((c) => c.sessionId === 'b')!.connected).toBe(false);
+  });
+
+  it('switching to eject purges already-absent voters', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = setEjectOnLeave(s, false);
+    s = leave(s, 'sb', false);
+    expect(s.connections['b']).toBeDefined();
+    s = setEjectOnLeave(s, true);
+    expect(s.connections['b']).toBeUndefined();
+    expect(s.connections['a']).toBeDefined();
+  });
+
+  it('purgeStalePresence clears stale sockets; empties eject rosters, keeps async ones', () => {
+    let ejectRoom = createRoom('r'); ejectRoom = join(ejectRoom, 'a', 'sa'); ejectRoom = join(ejectRoom, 'b', 'sb');
+    expect(Object.keys(purgeStalePresence(ejectRoom).connections)).toHaveLength(0);
+
+    let keepRoom = createRoom('k'); keepRoom = setEjectOnLeave(keepRoom, false); keepRoom = join(keepRoom, 'a', 'ka');
+    const purged = purgeStalePresence(keepRoom);
+    expect(purged.connections['a']).toBeDefined();
+    expect(purged.connections['a'].socketIds).toHaveLength(0);
   });
 });

@@ -54,30 +54,31 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
           </DropdownMenu>
           <Button onClick={() => socket.emit('reveal:force', { slug }, ack)} disabled={room.revealed}>Reveal</Button>
           <Button variant="destructive" onClick={() => socket.emit('vote:reset', { slug }, ack)}>Reset</Button>
-          <div
-            className="flex items-center gap-1 rounded-md border p-1"
-            role="group"
-            aria-label="What happens when a voter leaves"
-            title="Eject: remove people when they close their tab (sync). Keep: keep them in the room so they can return (async)."
-          >
-            <span className="px-1.5 text-xs font-medium text-muted-foreground">On leave</span>
-            <Button
-              size="sm"
-              variant={room.ejectOnLeave ? 'default' : 'ghost'}
-              aria-pressed={room.ejectOnLeave}
-              onClick={() => !room.ejectOnLeave && socket.emit('eject:set', { slug, ejectOnLeave: true }, ack)}
-            >
-              Eject
-            </Button>
-            <Button
-              size="sm"
-              variant={!room.ejectOnLeave ? 'default' : 'ghost'}
-              aria-pressed={!room.ejectOnLeave}
-              onClick={() => room.ejectOnLeave && socket.emit('eject:set', { slug, ejectOnLeave: false }, ack)}
-            >
-              Keep
-            </Button>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="outline" />}>
+              When a voter leaves: {room.ejectOnLeave ? 'Eject' : 'Keep'}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80">
+              <DropdownMenuItem
+                onClick={() => { if (!room.ejectOnLeave) socket.emit('eject:set', { slug, ejectOnLeave: true }, ack); }}
+                className="flex flex-col items-start gap-0.5 py-2"
+              >
+                <span className="flex w-full items-center justify-between gap-4 font-semibold">
+                  Eject them {room.ejectOnLeave && <Check className="size-4 text-primary" />}
+                </span>
+                <span className="text-xs text-muted-foreground">Remove them when they close their tab — synchronous voting.</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => { if (room.ejectOnLeave) socket.emit('eject:set', { slug, ejectOnLeave: false }, ack); }}
+                className="flex flex-col items-start gap-0.5 py-2"
+              >
+                <span className="flex w-full items-center justify-between gap-4 font-semibold">
+                  Keep them {!room.ejectOnLeave && <Check className="size-4 text-primary" />}
+                </span>
+                <span className="text-xs text-muted-foreground">Keep them in the room so they can return later — asynchronous voting.</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </>
       )}
     </div>

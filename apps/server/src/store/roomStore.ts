@@ -39,6 +39,10 @@ export class RoomStore {
     return !!this.db.prepare('SELECT 1 FROM rooms WHERE slug = ?').get(slug);
   }
 
+  async allSlugs(): Promise<string[]> {
+    return (this.db.prepare('SELECT slug FROM rooms').all() as Array<{ slug: string }>).map((r) => r.slug);
+  }
+
   async delete(slug: string): Promise<void> {
     this.db.prepare('DELETE FROM rooms WHERE slug = ?').run(slug);
   }
