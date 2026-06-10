@@ -39,7 +39,17 @@ describe('Room domain', () => {
     s = setCardPack(s, 'Fibonacci');
     expect(s.cardPack).toBe('Fibonacci');
     expect(s.connections['a'].vote).toBeNull();
-    expect(s.forcedReveal).toBe(false);
+    expect(s.revealed).toBe(false);
+  });
+
+  it('stays revealed when a new voter joins after reveal, and locks votes', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa');
+    s = recordVote(s, 'a', '5'); // sole voter -> auto-reveal latches
+    expect(s.revealed).toBe(true);
+    s = join(s, 'b', 'sb'); // late joiner must not un-reveal the round
+    expect(s.revealed).toBe(true);
+    s = recordVote(s, 'b', '8'); // votes are locked once revealed
+    expect(s.connections['b'].vote).toBeNull();
   });
 
   it('force reveal exposes votes immediately', () => {
@@ -54,7 +64,7 @@ describe('Room domain', () => {
     s = resetVotes(s);
     expect(s.history).toHaveLength(1);
     expect(s.history[0].votes).toEqual([{ vote: '8' }]);
-    expect(s.forcedReveal).toBe(false);
+    expect(s.revealed).toBe(false);
     expect(s.connections['a'].vote).toBeNull();
   });
 

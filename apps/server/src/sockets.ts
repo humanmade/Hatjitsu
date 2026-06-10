@@ -88,8 +88,11 @@ export function registerHandlers(io: IO, store: RoomStore): void {
     socket.on('reveal:force', (data, cb) => {
       const p = slugOnlySchema.safeParse(data);
       if (!p.success) return cb({ error: 'Invalid payload' });
-      mutate(p.data.slug, cb, (s) =>
-        room.isAdmin(s, socket.data.sessionId) ? room.forceReveal(s) : { error: 'Only the room admin can force reveal' });
+      mutate(p.data.slug, cb, (s) => {
+        if (!room.isAdmin(s, socket.data.sessionId)) return { error: 'Only the room admin can force reveal' };
+        if (!room.hasAnyVote(s)) return { error: 'There are no votes to reveal yet' };
+        return room.forceReveal(s);
+      });
     });
 
     socket.on('name:set', (data, cb) => {

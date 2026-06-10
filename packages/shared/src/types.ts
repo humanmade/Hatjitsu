@@ -23,7 +23,9 @@ export interface RoomState {
   createdAt: number;
   adminSessionId: string | null;
   cardPack: string;
-  forcedReveal: boolean;
+  /** Latched: once a round reveals (all voters voted, or forced) it stays revealed until
+   * reset/deck-change. Voting is locked while true; late joiners don't un-reveal it. */
+  revealed: boolean;
   roundLabel: string;
   history: HistoryEntry[];
   connections: Record<string, Connection>; // keyed by sessionId
@@ -46,7 +48,6 @@ export interface PublicRoom {
   mode: RoomMode;
   adminSessionId: string | null;
   cardPack: string;
-  forcedReveal: boolean;
   revealed: boolean;
   roundLabel: string;
   history: HistoryEntry[];

@@ -4,7 +4,7 @@ import { Results } from './Results';
 import type { PublicRoom } from '@hmpp/shared';
 
 const room = (over: Partial<PublicRoom>): PublicRoom => ({
-  slug: 'r', mode: 'live', adminSessionId: 'a', cardPack: '135 set', forcedReveal: false,
+  slug: 'r', mode: 'live', adminSessionId: 'a', cardPack: '135 set',
   revealed: true, roundLabel: '', history: [], ejectOnLeave: true,
   votes: ['5', '5'],
   connections: [

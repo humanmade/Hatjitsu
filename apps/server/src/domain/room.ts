@@ -8,7 +8,7 @@ const clone = (s: RoomState): RoomState => structuredClone(s);
 export function createRoom(slug: string): RoomState {
   return {
     slug, mode: 'live', createdAt: Date.now(), adminSessionId: null,
-    cardPack: '135 set', forcedReveal: false, roundLabel: '', history: [], connections: {},
+    cardPack: '135 set', revealed: false, roundLabel: '', history: [], connections: {},
     ejectOnLeave: true,
   };
 }
@@ -18,6 +18,22 @@ const activeConnections = (s: RoomState): Connection[] =>
 
 const takenNames = (s: RoomState, excludeSessionId?: string): Set<string> =>
   new Set(activeConnections(s).filter((c) => c.sessionId !== excludeSessionId).map((c) => c.name));
+
+const allVotersVoted = (s: RoomState): boolean => {
+  const voters = activeConnections(s).filter((c) => c.voter);
+  return voters.length > 0 && voters.every((v) => v.vote !== null && v.vote !== undefined);
+};
+
+/** Latch the round to revealed once every connected voter has voted. Mutates the clone. */
+const maybeReveal = (next: RoomState): RoomState => {
+  if (!next.revealed && allVotersVoted(next)) next.revealed = true;
+  return next;
+};
+
+/** Has at least one connected voter cast a vote? (Gates "force reveal".) */
+export function hasAnyVote(s: RoomState): boolean {
+  return activeConnections(s).some((c) => c.voter && c.vote !== null && c.vote !== undefined);
+}
 
 export function enter(
   s: RoomState,
@@ -57,17 +73,20 @@ export function leave(s: RoomState, socketId: string, ejectOnLeave = true): Room
       next.adminSessionId = nextAdmin ? nextAdmin.sessionId : null;
     }
   }
-  return next;
+  // A voter leaving may complete the round for everyone who remains.
+  return maybeReveal(next);
 }
 
 export function recordVote(s: RoomState, sessionId: string, vote: Vote): RoomState {
+  if (s.revealed) return s; // votes are locked once the round is revealed
   const next = clone(s);
   const conn = next.connections[sessionId];
   if (conn) conn.vote = vote;
-  return next;
+  return maybeReveal(next);
 }
 
 export function clearVote(s: RoomState, sessionId: string): RoomState {
+  if (s.revealed) return s;
   const next = clone(s);
   const conn = next.connections[sessionId];
   if (conn) conn.vote = null;
@@ -87,13 +106,13 @@ export function resetVotes(s: RoomState): RoomState {
   }
   next.roundLabel = '';
   for (const c of Object.values(next.connections)) c.vote = null;
-  next.forcedReveal = false;
+  next.revealed = false;
   return next;
 }
 
 export function forceReveal(s: RoomState): RoomState {
   const next = clone(s);
-  next.forcedReveal = true;
+  next.revealed = true;
   return next;
 }
 
@@ -104,7 +123,8 @@ export function toggleVoter(s: RoomState, sessionId: string, voter: boolean): Ro
     conn.voter = voter;
     if (!voter) conn.vote = null;
   }
-  return next;
+  // Making the last non-voter an observer can complete the round.
+  return maybeReveal(next);
 }
 
 export function setName(s: RoomState, sessionId: string, name: string): RoomState {
@@ -120,7 +140,7 @@ export function setCardPack(s: RoomState, cardPack: string): RoomState {
   // A new deck invalidates the current votes (e.g. a "banana" vote can't carry into a
   // numeric deck), so changing the pack clears the round.
   for (const c of Object.values(next.connections)) c.vote = null;
-  next.forcedReveal = false;
+  next.revealed = false;
   return next;
 }
 
@@ -157,10 +177,7 @@ export function purgeStalePresence(s: RoomState): RoomState {
 }
 
 export function votingFinished(s: RoomState): boolean {
-  if (s.forcedReveal) return true;
-  const voters = activeConnections(s).filter((c) => c.voter);
-  if (voters.length === 0) return false;
-  return voters.every((v) => v.vote !== null && v.vote !== undefined);
+  return s.revealed;
 }
 
 export function clientCount(s: RoomState): number {
@@ -172,7 +189,7 @@ export function isAdmin(s: RoomState, sessionId: string | undefined): boolean {
 }
 
 export function publicView(s: RoomState): PublicRoom {
-  const revealed = votingFinished(s);
+  const revealed = s.revealed;
   const roster = Object.values(s.connections); // includes kept-but-disconnected participants
 
   // Anonymous reveal: a sorted multiset of votes, decoupled from who cast them.
@@ -191,7 +208,7 @@ export function publicView(s: RoomState): PublicRoom {
 
   return {
     slug: s.slug, mode: s.mode, adminSessionId: s.adminSessionId, cardPack: s.cardPack,
-    forcedReveal: s.forcedReveal, revealed, roundLabel: s.roundLabel, history: s.history,
+    revealed, roundLabel: s.roundLabel, history: s.history,
     votes, ejectOnLeave: s.ejectOnLeave,
     connections: roster.map((c) => ({
       sessionId: c.sessionId, name: c.name, color: c.color, voter: c.voter,

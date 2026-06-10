@@ -11,11 +11,10 @@ export function Fireworks({ room }: { room: PublicRoom }) {
     const wasRevealed = prevRevealed.current;
     prevRevealed.current = room.revealed;
     if (room.revealed && !wasRevealed) {
-      const voterCount = room.connections.filter((c) => c.voter).length;
-      const { voteStatus } = computeVoteResults(room.votes.map((v) => ({ vote: v })), voterCount, room.forcedReveal);
+      const { voteStatus } = computeVoteResults(room.votes.map((v) => ({ vote: v })), room.votes.length, true);
       if (voteStatus === 'unanimous') setBurst((b) => b + 1);
     }
-  }, [room.revealed, room.votes, room.connections, room.forcedReveal]);
+  }, [room.revealed, room.votes]);
 
   if (burst === 0) return null;
   return <Confetti key={burst} />;

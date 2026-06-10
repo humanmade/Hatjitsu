@@ -12,6 +12,7 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
   const slug = room.slug;
   const isAdmin = room.adminSessionId === sessionId;
   const me = room.connections.find((c) => c.sessionId === sessionId);
+  const anyVoted = room.connections.some((c) => c.voter && c.hasVoted);
   const ack = (res: { ok: true } | { error: string }) => { if ('error' in res) toast.error(res.error); };
   const [label, setLabel] = useState(room.roundLabel);
   useEffect(() => { setLabel(room.roundLabel); }, [room.roundLabel]);
@@ -52,7 +53,7 @@ export function RoomControls({ room, sessionId }: { room: PublicRoom; sessionId:
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button onClick={() => socket.emit('reveal:force', { slug }, ack)} disabled={room.revealed}>Reveal</Button>
+          <Button onClick={() => socket.emit('reveal:force', { slug }, ack)} disabled={room.revealed || !anyVoted}>Reveal</Button>
           <Button variant="destructive" onClick={() => socket.emit('vote:reset', { slug }, ack)}>Reset</Button>
           <DropdownMenu>
             <DropdownMenuTrigger render={<Button variant="outline" />}>

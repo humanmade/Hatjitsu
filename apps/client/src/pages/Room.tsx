@@ -87,8 +87,7 @@ export function Room() {
 
   const revealHighlight = room.revealed
     ? (() => {
-        const voterCount = room.connections.filter((c) => c.voter).length;
-        const st = computeVoteResults(room.votes.map((v) => ({ vote: v })), voterCount, room.forcedReveal).voteStatus;
+        const st = computeVoteResults(room.votes.map((v) => ({ vote: v })), room.votes.length, true).voteStatus;
         return st === 'unanimous' ? 'unanimous' : st === 'problem' ? 'problem' : null;
       })()
     : null;
