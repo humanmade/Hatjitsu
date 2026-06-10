@@ -3,21 +3,20 @@ import { computeVoteResults, type PublicRoom } from '@hmpp/shared';
 import { Confetti } from './Confetti';
 
 export function Fireworks({ room }: { room: PublicRoom }) {
-  const [show, setShow] = useState(false);
+  // A burst counter that increments on each false→true unanimous transition. Keying
+  // <Confetti> by it remounts a fresh burst every round (no fragile timer in this effect).
+  const [burst, setBurst] = useState(0);
   const prevRevealed = useRef(false);
   useEffect(() => {
-    if (!room.revealed) { prevRevealed.current = false; return; }
-    if (prevRevealed.current) return;
-    prevRevealed.current = true;
-    const voterCount = room.connections.filter((c) => c.voter).length;
-    const { voteStatus } = computeVoteResults(room.votes.map((v) => ({ vote: v })), voterCount, room.forcedReveal);
-    if (voteStatus === 'unanimous') {
-      setShow(true);
-      const t = setTimeout(() => setShow(false), 4500);
-      return () => clearTimeout(t);
+    const wasRevealed = prevRevealed.current;
+    prevRevealed.current = room.revealed;
+    if (room.revealed && !wasRevealed) {
+      const voterCount = room.connections.filter((c) => c.voter).length;
+      const { voteStatus } = computeVoteResults(room.votes.map((v) => ({ vote: v })), voterCount, room.forcedReveal);
+      if (voteStatus === 'unanimous') setBurst((b) => b + 1);
     }
   }, [room.revealed, room.votes, room.connections, room.forcedReveal]);
 
-  if (!show) return null;
-  return <Confetti />;
+  if (burst === 0) return null;
+  return <Confetti key={burst} />;
 }

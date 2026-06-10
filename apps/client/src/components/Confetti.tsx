@@ -1,9 +1,15 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const COLORS = ['#46C2CB', '#BE3144', '#A2678A', '#f5c542', '#5b8def', '#7bd389', '#ff8c42', '#e0488b'];
 
 /** Pure-CSS confetti burst: many small pieces fall + spin + fade. Respects reduced-motion. */
 export function Confetti({ count = 110 }: { count?: number }) {
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setDone(true), 4800);
+    return () => clearTimeout(t);
+  }, []);
+
   const pieces = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => ({
@@ -21,6 +27,7 @@ export function Confetti({ count = 110 }: { count?: number }) {
     [count],
   );
 
+  if (done) return null;
   return (
     <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden" aria-hidden="true">
       {pieces.map((p) => {
