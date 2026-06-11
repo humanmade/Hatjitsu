@@ -37,6 +37,11 @@
   to   { transform: perspective(700px) rotateY(0deg); opacity: 1; }
 }
 
+@keyframes hmpp-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-6px) scale(1.03); }
+}
+
 @keyframes hmpp-shake {
   10%, 90% { transform: translateX(-1px); }
   20%, 80% { transform: translateX(2px); }

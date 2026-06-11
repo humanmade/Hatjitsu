@@ -14,6 +14,7 @@ import { Results } from '@/components/Results';
 import { RoomControls } from '@/components/RoomControls';
 import { History } from '@/components/History';
 import { Fireworks } from '@/components/Fireworks';
+import { IdleEgg } from '@/components/IdleEgg';
 import { computeVoteResults } from '@hmpp/shared';
 
 export function Room() {
@@ -119,6 +120,7 @@ export function Room() {
       <RoomControls room={room} sessionId={sessionId} />
       <History room={room} />
       <Fireworks room={room} />
+      <IdleEgg room={room} />
     </div>
   );
 }
