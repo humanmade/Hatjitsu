@@ -17,7 +17,7 @@ export function Card({ value, selected, disabled, onClick }: {
         'disabled:pointer-events-none disabled:opacity-45',
         selected
           ? 'border-primary bg-primary text-primary-foreground shadow-md'
-          : 'border-border hover:border-primary/50',
+          : 'border-border hover:border-primary/50 active:border-primary',
       )}
     >
       <span aria-hidden className="absolute left-2 top-1.5 text-xs font-semibold opacity-60">{value}</span>
