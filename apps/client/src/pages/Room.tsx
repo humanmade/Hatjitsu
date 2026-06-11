@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { socket } from '@/lib/socket';
 import { getSessionId, getStoredName, setStoredName, getStoredRole, setStoredRole } from '@/lib/session';
 import { useRoom } from '@/store/useRoom';
+import { useRoomNotifications } from '@/lib/useRoomNotifications';
 import { Deck } from '@/components/Deck';
 import { Participants } from '@/components/Participants';
 import { RevealedVotes } from '@/components/RevealedVotes';
@@ -50,6 +51,8 @@ export function Room() {
       useRoom.getState().clear();
     };
   }, [slug, sessionId, setRoom]);
+
+  useRoomNotifications(room);
 
   const join = (voter: boolean) => {
     setStoredRole(voter);
