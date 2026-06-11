@@ -14,7 +14,7 @@ import { Results } from '@/components/Results';
 import { RoomControls } from '@/components/RoomControls';
 import { History } from '@/components/History';
 import { Fireworks } from '@/components/Fireworks';
-import { IdleEgg } from '@/components/IdleEgg';
+import { useIdlePhase } from '@/lib/useIdlePhase';
 import { computeVoteResults } from '@hmpp/shared';
 
 export function Room() {
@@ -54,6 +54,7 @@ export function Room() {
   }, [slug, sessionId, setRoom]);
 
   useRoomNotifications(room);
+  const idlePhase = useIdlePhase(room);
 
   const join = (voter: boolean) => {
     setStoredRole(voter);
@@ -104,7 +105,7 @@ export function Room() {
         {room.revealed ? (
           <RevealedVotes votes={room.votes} highlight={revealHighlight} />
         ) : (
-          <Participants connections={room.connections} />
+          <Participants connections={room.connections} idlePhase={idlePhase} />
         )}
       </div>
       <Results room={room} />
@@ -120,7 +121,6 @@ export function Room() {
       <RoomControls room={room} sessionId={sessionId} />
       <History room={room} />
       <Fireworks room={room} />
-      <IdleEgg room={room} />
     </div>
   );
 }

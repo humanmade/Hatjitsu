@@ -1,8 +1,16 @@
 import { Eye, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PublicConnection } from '@hmpp/shared';
+import { IdleHand } from '@/components/IdleHand';
+import type { IdlePhase } from '@/lib/useIdlePhase';
 
-export function Participants({ connections }: { connections: PublicConnection[] }) {
+export function Participants({
+  connections,
+  idlePhase = 'awake',
+}: {
+  connections: PublicConnection[];
+  idlePhase?: IdlePhase;
+}) {
   if (connections.length === 0) return null;
   return (
     <ul className="flex flex-wrap justify-center gap-5">
@@ -13,8 +21,9 @@ export function Participants({ connections }: { connections: PublicConnection[] 
         return (
           <li
             key={c.sessionId}
-            className="flex w-20 flex-col items-center gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-300 sm:w-24"
+            className="relative flex w-20 flex-col items-center gap-2 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-300 sm:w-24"
           >
+            {c.voter && <IdleHand phase={idlePhase} />}
             <div
               className={cn(
                 'grid aspect-[5/7] w-full place-items-center rounded-xl border-2 shadow-sm',

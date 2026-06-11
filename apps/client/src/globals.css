@@ -42,6 +42,16 @@
   50%      { transform: translateY(-6px) scale(1.03); }
 }
 
+@keyframes hmpp-egg-in {
+  from { opacity: 0; transform: translateY(28px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes hmpp-egg-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(28px) scale(0.92); }
+}
+
 @keyframes hmpp-shake {
   10%, 90% { transform: translateX(-1px); }
   20%, 80% { transform: translateX(2px); }
