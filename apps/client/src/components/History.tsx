@@ -1,20 +1,34 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { toCsv, toTsv, toMarkdown } from '@/lib/historyExport';
 import type { PublicRoom } from '@hmpp/shared';
 
 export function History({ room }: { room: PublicRoom }) {
   const [open, setOpen] = useState(false);
   if (room.history.length === 0) return null;
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(room.history, null, 2)], { type: 'application/json' });
+  const download = (content: string, ext: string, mime: string) => {
+    const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = `${room.slug}-history.json`; a.click();
+    a.href = url; a.download = `${room.slug}-history.${ext}`; a.click();
     URL.revokeObjectURL(url);
   };
+
+  const FORMATS = [
+    { label: 'JSON', run: () => download(JSON.stringify(room.history, null, 2), 'json', 'application/json') },
+    { label: 'CSV', run: () => download(toCsv(room.history), 'csv', 'text/csv') },
+    { label: 'TSV', run: () => download(toTsv(room.history), 'tsv', 'text/tab-separated-values') },
+    { label: 'Markdown', run: () => download(toMarkdown(room.history), 'md', 'text/markdown') },
+  ];
 
   return (
     <section className="w-full max-w-md">
@@ -54,7 +68,20 @@ export function History({ room }: { room: PublicRoom }) {
             ))}
           </ol>
           <div className="mt-2 flex justify-end">
-            <Button variant="ghost" size="sm" onClick={exportJson}>Export JSON</Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button variant="ghost" size="sm" />}
+                className="gap-1"
+              >
+                Export
+                <ChevronDown className="size-3.5" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {FORMATS.map(({ label, run }) => (
+                  <DropdownMenuItem key={label} onClick={run}>{label}</DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       )}
