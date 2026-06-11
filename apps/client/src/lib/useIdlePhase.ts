@@ -14,13 +14,14 @@ const DOZE_HOLD_MS = 4500; // hold the doze before breathing resumes
 // Re-doze every couple of minutes while idle. In test mode (?idle) re-doze every doze
 // period so the replay is observable quickly.
 const DOZE_REPEAT_MS = idleParam > 0 ? DOZE_MS : 2 * 60 * 1000;
+const STARTLE_MS = 500; // hold the surprised "!" before hands whisk away
 const EXIT_MS = 350; // must match the hmpp-egg-out duration in globals.css
 
 export const idleReduceMotion =
   typeof window !== 'undefined' &&
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-export type IdlePhase = 'awake' | 'breathing' | 'dozing' | 'leaving';
+export type IdlePhase = 'awake' | 'breathing' | 'dozing' | 'startled' | 'leaving';
 
 export function useIdlePhase(room: PublicRoom | null): IdlePhase {
   const [phase, setPhase] = useState<IdlePhase>('awake');
@@ -29,11 +30,12 @@ export function useIdlePhase(room: PublicRoom | null): IdlePhase {
   const lastActivity = useRef(Date.now());
   const nextDoze = useRef(DOZE_MS); // idle-elapsed (ms) at which to nod off next
 
-  // Single reset path: bump the clock and, if hands are showing, send them out.
+  // Single reset path: bump the clock and, if hands are showing, startle them
+  // (the startled -> leaving -> awake sequence then plays itself out).
   const reset = () => {
     lastActivity.current = Date.now();
     nextDoze.current = DOZE_MS;
-    setPhase((p) => (p === 'breathing' || p === 'dozing' ? 'leaving' : p));
+    setPhase((p) => (p === 'breathing' || p === 'dozing' ? 'startled' : p));
   };
 
   // Local input + tab-return reset.
@@ -56,11 +58,16 @@ export function useIdlePhase(room: PublicRoom | null): IdlePhase {
     : 'none';
   useEffect(() => { reset(); }, [sig]);
 
-  // Unmount-after-exit: drop back to awake once the exit animation has played.
+  // Surprised beat, then hands whisk away, then gone.
   useEffect(() => {
-    if (phase !== 'leaving') return;
-    const id = window.setTimeout(() => setPhase('awake'), EXIT_MS);
-    return () => window.clearTimeout(id);
+    if (phase === 'startled') {
+      const id = window.setTimeout(() => setPhase('leaving'), STARTLE_MS);
+      return () => window.clearTimeout(id);
+    }
+    if (phase === 'leaving') {
+      const id = window.setTimeout(() => setPhase('awake'), EXIT_MS);
+      return () => window.clearTimeout(id);
+    }
   }, [phase]);
 
   // Phase advancement (reads the live phase via ref to stay out of the deps).
@@ -70,7 +77,7 @@ export function useIdlePhase(room: PublicRoom | null): IdlePhase {
     const id = window.setInterval(() => {
       if (document.hidden) return;
       const p = phaseRef.current;
-      if (p === 'leaving') return;
+      if (p === 'startled' || p === 'leaving') return;
       const idle = Date.now() - lastActivity.current;
       if (p !== 'dozing' && idle >= nextDoze.current) {
         nextDoze.current = idle + DOZE_REPEAT_MS; // re-arm for the next nod-off

@@ -52,6 +52,12 @@
   to   { opacity: 0; transform: translateY(28px) scale(0.92); }
 }
 
+@keyframes hmpp-pop {
+  0%   { opacity: 0; transform: scale(0) translateY(4px); }
+  70%  { opacity: 1; transform: scale(1.25) translateY(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 @keyframes hmpp-shake {
   10%, 90% { transform: translateX(-1px); }
   20%, 80% { transform: translateX(2px); }

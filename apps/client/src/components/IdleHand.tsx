@@ -9,6 +9,8 @@ export function IdleHand({ phase }: { phase: IdlePhase }) {
   const dozing = phase === 'dozing';
   const leaving = phase === 'leaving';
   const rots = [-16, 0, 16];
+  // Floating reaction above the hand: drowsy doze, or startled "!" on the way out.
+  const reaction = dozing ? '💤' : phase === 'startled' || leaving ? '❗' : null;
 
   return (
     <div
@@ -30,7 +32,7 @@ export function IdleHand({ phase }: { phase: IdlePhase }) {
             <div
               className={cn(
                 'grid aspect-[5/7] w-8 place-items-center rounded-md border bg-card shadow-md',
-                !dozing && 'motion-safe:animate-[hmpp-breathe_4s_ease-in-out_infinite]',
+                phase === 'breathing' && 'motion-safe:animate-[hmpp-breathe_4s_ease-in-out_infinite]',
               )}
               style={{ animationDelay: `${i * 0.2}s` }}
             >
@@ -38,10 +40,12 @@ export function IdleHand({ phase }: { phase: IdlePhase }) {
             </div>
           </div>
         ))}
-        {dozing && (
-          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-lg motion-safe:animate-[hmpp-flip-in_0.5s_ease-out_both]">
-            💤
-          </span>
+        {reaction && (
+          <div className="absolute -top-6 inset-x-0 flex justify-center">
+            <span key={reaction} className="text-lg motion-safe:animate-[hmpp-pop_0.3s_ease-out_both]">
+              {reaction}
+            </span>
+          </div>
         )}
       </div>
     </div>
