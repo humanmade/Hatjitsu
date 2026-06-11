@@ -12,9 +12,9 @@ export default function App() {
     <div className="min-h-screen">
       {!connected && <ConnectionStatus />}
       <header className="flex items-center justify-between p-4">
-        <a href="/" className="flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+        <a href="/" className="group flex items-center gap-2.5 text-lg font-semibold tracking-tight">
           <img src="/hm-mark-red.svg" alt="Human Made" className="h-6 w-auto" />
-          <span>Planning Poker</span>
+          <span className="transition-colors group-hover:text-primary">Planning Poker</span>
         </a>
         <ThemeToggle />
       </header>
