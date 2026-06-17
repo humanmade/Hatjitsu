@@ -22,9 +22,10 @@ RUN npm ci --omit=dev --workspace @hmpp/server --workspace @hmpp/shared
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/apps/server/dist apps/server/dist
 COPY --from=build /app/apps/client/dist apps/server/dist/public
-RUN groupadd --system app && useradd --system --gid app app \
- && mkdir -p /data && chown app:app /data
-USER app
+# Run as uid/gid 33 (www-data) to match the tools.hmn.md EFS access point,
+# which creates /data owned by 33:33 (mode 755). A different uid cannot write to it.
+RUN mkdir -p /data && chown 33:33 /data
+USER 33:33
 VOLUME ["/data"]
 ENV PORT=80
 ENV DATA_DIR=/data
