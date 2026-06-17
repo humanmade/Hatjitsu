@@ -59,6 +59,21 @@ export interface PublicRoom {
 
 export type Ack = { ok: true } | { error: string };
 
+/** Per-room standing returned by `rooms:status`. `active:true` is only ever sent for a
+ * room whose roster contains the requesting sessionId (membership gate), so a non-member
+ * and a non-existent room are indistinguishable. */
+export type RoomStatus =
+  | { slug: string; active: false }
+  | {
+      slug: string;
+      active: true;
+      voter: boolean;
+      hasVoted: boolean;
+      revealed: boolean;
+      roundLabel: string;
+      count: number;
+    };
+
 /** The room:join ack: the public room plus the joiner's OWN vote (sent only to them, so
  * anonymity holds), letting a returning tab restore its highlighted selection. */
 export type JoinResult = PublicRoom & { yourVote: Vote };

@@ -1,10 +1,11 @@
-import type { PublicRoom, JoinResult, Ack } from './types.js';
-import type { JoinPayload, VotePayload, CardPackPayload, NamePayload, LabelPayload, TogglePayload, EjectPayload } from './schemas.js';
+import type { PublicRoom, JoinResult, Ack, RoomStatus } from './types.js';
+import type { JoinPayload, VotePayload, CardPackPayload, NamePayload, LabelPayload, TogglePayload, EjectPayload, RoomsStatusPayload } from './schemas.js';
 
 export interface ClientToServerEvents {
   'room:create': (cb: (res: { slug: string }) => void) => void;
   'room:join': (data: JoinPayload, cb: (res: JoinResult | { error: string }) => void) => void;
   'room:info': (data: { slug: string }, cb: (res: PublicRoom | { error: string }) => void) => void;
+  'rooms:status': (data: RoomsStatusPayload, cb: (res: RoomStatus[] | { error: string }) => void) => void;
   'vote': (data: VotePayload, cb: (res: Ack) => void) => void;
   'unvote': (data: { slug: string }, cb: (res: Ack) => void) => void;
   'vote:reset': (data: { slug: string }, cb: (res: Ack) => void) => void;
