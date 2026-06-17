@@ -6,9 +6,11 @@ import type { IdlePhase } from '@/lib/useIdlePhase';
 
 export function Participants({
   connections,
+  facilitatorSessionId,
   idlePhase = 'awake',
 }: {
   connections: PublicConnection[];
+  facilitatorSessionId?: string | null;
   idlePhase?: IdlePhase;
 }) {
   if (connections.length === 0) return null;
@@ -64,13 +66,24 @@ export function Participants({
                 </span>
               )}
             </div>
-            <span
-              className="max-w-full truncate text-sm font-medium"
-              // Keep the player's hue but guarantee contrast: blend toward the theme's
-              // foreground (lightens dark colours in dark mode, darkens light ones in light mode).
-              style={{ color: `color-mix(in oklab, ${c.color}, var(--foreground) 40%)` }}
-            >
-              {c.name}
+            <span className="flex max-w-full items-center gap-1.5">
+              {c.sessionId === facilitatorSessionId && (
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: c.color }}
+                  title="Room Facilitator"
+                  aria-label="Room Facilitator"
+                  role="img"
+                />
+              )}
+              <span
+                className="truncate text-sm font-medium"
+                // Keep the player's hue but guarantee contrast: blend toward the theme's
+                // foreground (lightens dark colours in dark mode, darkens light ones in light mode).
+                style={{ color: `color-mix(in oklab, ${c.color}, var(--foreground) 40%)` }}
+              >
+                {c.name}
+              </span>
             </span>
           </li>
         );

@@ -2,18 +2,20 @@ import { describe, it, expect } from 'vitest';
 import {
   createRoom, enter, leave, recordVote, clearVote, resetVotes,
   forceReveal, toggleVoter, setCardPack, setEjectOnLeave, purgeStalePresence,
-  isAdmin, votingFinished, clientCount, publicView, statusFor,
+  isFacilitator, facilitatorClaimable, claimFacilitator, passFacilitator,
+  manualRevealBlocked, votingFinished, clientCount, publicView, statusFor,
 } from './room';
+import { REVEAL_COOLDOWN_MS } from '@hmpp/shared';
 
 const join = (state: ReturnType<typeof createRoom>, sessionId: string, socketId: string, voter = true) =>
   enter(state, { sessionId, socketId, voter });
 
 describe('Room domain', () => {
-  it('makes the first joiner the admin', () => {
+  it('makes the first joiner the facilitator', () => {
     let s = createRoom('happy-otter');
     s = join(s, 'a', 'sock-a');
-    expect(s.adminSessionId).toBe('a');
-    expect(isAdmin(s, 'a')).toBe(true);
+    expect(s.facilitatorSessionId).toBe('a');
+    expect(isFacilitator(s, 'a')).toBe(true);
     expect(clientCount(s)).toBe(1);
   });
 
@@ -75,11 +77,85 @@ describe('Room domain', () => {
     expect(s.connections['a'].vote).toBeNull();
   });
 
-  it('reassigns admin when the admin leaves', () => {
+  it('does NOT reassign the facilitator when they leave — the seat becomes claimable', () => {
     let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
-    s = leave(s, 'sa');
-    expect(s.adminSessionId).toBe('b');
-    expect(clientCount(s)).toBe(1);
+    s = leave(s, 'sa', false); // keep mode: 'a' stays in the roster but disconnected
+    expect(s.facilitatorSessionId).toBe('a'); // never silently handed to 'b'
+    expect(isFacilitator(s, 'b')).toBe(false);
+    expect(facilitatorClaimable(s)).toBe(true); // because the holder is disconnected
+  });
+
+  it('lets the facilitator silently reclaim on return while the seat is unclaimed', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = leave(s, 'sa', false);
+    s = enter(s, { sessionId: 'a', socketId: 'sa2' }); // they come back
+    expect(s.facilitatorSessionId).toBe('a');
+    expect(facilitatorClaimable(s)).toBe(false); // holder connected again
+  });
+
+  it('lets anyone claim a vacant or abandoned facilitator seat', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = leave(s, 'sa', false); // facilitator 'a' disconnects
+    s = claimFacilitator(s, 'b');
+    expect(s.facilitatorSessionId).toBe('b');
+    s = enter(s, { sessionId: 'a', socketId: 'sa2' }); // original returns AFTER it was claimed
+    expect(s.facilitatorSessionId).toBe('b'); // claimer keeps it; returner is ordinary
+  });
+
+  it('the facilitator can pass the seat to another participant', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = passFacilitator(s, 'b');
+    expect(s.facilitatorSessionId).toBe('b');
+  });
+
+  it('is not claimable while a connected facilitator holds it', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    expect(facilitatorClaimable(s)).toBe(false);
+  });
+
+  it('sweeps disconnected non-voters to observer when the round auto-reveals', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = setEjectOnLeave(s, false);
+    s = leave(s, 'sb', false); // 'b' is a voter but away (tab closed), never voted
+    s = recordVote(s, 'a', '5'); // last connected voter votes -> auto-reveal
+    expect(s.revealed).toBe(true);
+    expect(s.connections['b'].voter).toBe(false); // swept to observer
+    expect(s.connections['b'].autoDemoted).toBe(true);
+  });
+
+  it('sweeps every non-voter to observer on a manual reveal', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb'); s = join(s, 'c', 'sc');
+    s = recordVote(s, 'a', '5'); // b and c are connected but haven't voted
+    s = forceReveal(s);
+    expect(s.connections['b'].voter).toBe(false);
+    expect(s.connections['b'].autoDemoted).toBe(true);
+    expect(s.connections['c'].voter).toBe(false);
+    expect(s.connections['a'].voter).toBe(true); // the one who voted stays a voter
+    expect(s.connections['a'].autoDemoted).toBeFalsy();
+  });
+
+  it('clears the autoDemoted flag when the person makes a voter choice or the round resets', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = recordVote(s, 'a', '5'); s = forceReveal(s); // sweeps 'b'
+    expect(s.connections['b'].autoDemoted).toBe(true);
+    s = toggleVoter(s, 'b', true); // 'b' chooses "rejoin voting"
+    expect(s.connections['b'].autoDemoted).toBeFalsy();
+    expect(s.connections['b'].voter).toBe(true);
+  });
+
+  it('stamps roundStartedAt on create and on reset', () => {
+    let s = createRoom('r');
+    expect(s.roundStartedAt).toBe(s.createdAt);
+    const firstStart = s.roundStartedAt;
+    s = join(s, 'a', 'sa'); s = recordVote(s, 'a', '5'); s = forceReveal(s);
+    s = resetVotes(s);
+    expect(s.roundStartedAt).toBeGreaterThanOrEqual(firstStart);
+  });
+
+  it('blocks a manual reveal only within the cooldown window after a round starts', () => {
+    const s = createRoom('r');
+    expect(manualRevealBlocked(s, s.roundStartedAt + 1)).toBe(true);
+    expect(manualRevealBlocked(s, s.roundStartedAt + REVEAL_COOLDOWN_MS)).toBe(false);
   });
 
   it('keeps a session alive across multiple sockets (tabs)', () => {

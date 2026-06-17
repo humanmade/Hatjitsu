@@ -4,6 +4,7 @@ import { Lobby } from './pages/Lobby';
 import { Room } from './pages/Room';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import { NotifyToggle } from './components/NotifyToggle';
+import { FacilitatorMenu } from './components/FacilitatorMenu';
 import { useSocketDown } from './lib/useConnection';
 import { cn } from './lib/utils';
 
@@ -18,7 +19,8 @@ export default function App() {
           <img src="/hm-mark-red.svg" alt="Human Made" className="h-6 w-auto" />
           <span className="transition-colors group-hover:text-primary">Planning Poker</span>
         </a>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <FacilitatorMenu />
           <NotifyToggle />
           <ThemeToggle />
         </div>

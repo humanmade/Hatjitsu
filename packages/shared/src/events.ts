@@ -1,5 +1,5 @@
 import type { PublicRoom, JoinResult, Ack, RoomStatus } from './types.js';
-import type { JoinPayload, VotePayload, CardPackPayload, NamePayload, LabelPayload, TogglePayload, EjectPayload, RoomsStatusPayload } from './schemas.js';
+import type { JoinPayload, VotePayload, CardPackPayload, NamePayload, LabelPayload, TogglePayload, EjectPayload, FacilitatorPassPayload, RoomsStatusPayload } from './schemas.js';
 
 export interface ClientToServerEvents {
   'room:create': (cb: (res: { slug: string }) => void) => void;
@@ -15,6 +15,10 @@ export interface ClientToServerEvents {
   'voter:toggle': (data: TogglePayload, cb: (res: Ack) => void) => void;
   'cardpack:set': (data: CardPackPayload, cb: (res: Ack) => void) => void;
   'eject:set': (data: EjectPayload, cb: (res: Ack) => void) => void;
+  // Claim the facilitator seat (only when vacant or its holder is disconnected);
+  // pass it to another connected participant (only by the current facilitator).
+  'facilitator:claim': (data: { slug: string }, cb: (res: Ack) => void) => void;
+  'facilitator:pass': (data: FacilitatorPassPayload, cb: (res: Ack) => void) => void;
 }
 
 export interface ServerToClientEvents {

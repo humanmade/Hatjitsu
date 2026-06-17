@@ -4,12 +4,12 @@ import { Results } from './Results';
 import type { PublicRoom } from '@hmpp/shared';
 
 const room = (over: Partial<PublicRoom>): PublicRoom => ({
-  slug: 'r', mode: 'live', adminSessionId: 'a', cardPack: '135 set',
+  slug: 'r', mode: 'live', facilitatorSessionId: 'a', roundStartedAt: 0, cardPack: '135 set',
   revealed: true, roundLabel: '', history: [], ejectOnLeave: true,
   votes: ['5', '5'],
   connections: [
-    { sessionId: 'a', name: 'A', color: 'red', voter: true, hasVoted: true, connected: true },
-    { sessionId: 'b', name: 'B', color: 'blue', voter: true, hasVoted: true, connected: true },
+    { sessionId: 'a', name: 'A', color: 'red', voter: true, hasVoted: true, connected: true, autoDemoted: false },
+    { sessionId: 'b', name: 'B', color: 'blue', voter: true, hasVoted: true, connected: true, autoDemoted: false },
   ],
   ...over,
 });

@@ -14,9 +14,11 @@ import { Participants } from '@/components/Participants';
 import { RevealedVotes } from '@/components/RevealedVotes';
 import { Results } from '@/components/Results';
 import { RoomControls } from '@/components/RoomControls';
+import { RejoinNudge } from '@/components/RejoinNudge';
 import { History } from '@/components/History';
 import { Fireworks } from '@/components/Fireworks';
 import { useIdlePhase } from '@/lib/useIdlePhase';
+import { useRoomEventToasts } from '@/lib/useRoomEventToasts';
 import { computeVoteResults } from '@hmpp/shared';
 
 export function Room() {
@@ -57,6 +59,7 @@ export function Room() {
   }, [slug, sessionId, setRoom]);
 
   useRoomNotifications(room);
+  useRoomEventToasts(room, sessionId);
   const idlePhase = useIdlePhase(room);
 
   const join = (voter: boolean) => {
@@ -118,10 +121,11 @@ export function Room() {
           {room.revealed ? (
             <RevealedVotes votes={room.votes} highlight={revealHighlight} />
           ) : (
-            <Participants connections={room.connections} idlePhase={idlePhase} />
+            <Participants connections={room.connections} facilitatorSessionId={room.facilitatorSessionId} idlePhase={idlePhase} />
           )}
         </div>
       </AutoHeight>
+      {me?.autoDemoted && <RejoinNudge slug={slug} sessionId={sessionId} />}
       <Results room={room} />
       {room.revealed && (
         <Button

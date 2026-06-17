@@ -15,7 +15,7 @@ describe('mergeRecent', () => {
 
   it('merges status onto matching slugs', () => {
     const statuses: RoomStatus[] = [
-      { slug: 'a', active: true, voter: true, hasVoted: true, revealed: false, roundLabel: 'PROJ-1', count: 3 },
+      { slug: 'a', active: true, connected: true, voter: true, hasVoted: true, revealed: false, roundLabel: 'PROJ-1', count: 3, lastActivityAt: 1 },
       { slug: 'b', active: false },
     ];
     const view = mergeRecent(recent, statuses);

@@ -17,6 +17,7 @@ export const nameSchema = z.object({ slug, name: z.string().min(1).max(50).trans
 export const labelSchema = z.object({ slug, label: z.string().max(200).optional().default('') });
 export const toggleSchema = z.object({ slug, targetSessionId: z.string().min(1).max(100), voter: z.boolean() });
 export const ejectSchema = z.object({ slug, ejectOnLeave: z.boolean() });
+export const facilitatorPassSchema = z.object({ slug, targetSessionId: z.string().min(1).max(100) });
 // `slugs` is bounded to keep payloads small; the handler further truncates to 25.
 export const roomsStatusSchema = z.object({
   sessionId: z.string().min(1).max(100),
@@ -30,4 +31,5 @@ export type NamePayload = z.infer<typeof nameSchema>;
 export type LabelPayload = z.infer<typeof labelSchema>;
 export type TogglePayload = z.infer<typeof toggleSchema>;
 export type EjectPayload = z.infer<typeof ejectSchema>;
+export type FacilitatorPassPayload = z.infer<typeof facilitatorPassSchema>;
 export type RoomsStatusPayload = z.infer<typeof roomsStatusSchema>;

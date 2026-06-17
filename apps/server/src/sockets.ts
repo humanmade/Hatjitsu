@@ -2,7 +2,7 @@ import type { Server, Socket } from 'socket.io';
 import {
   type ClientToServerEvents, type ServerToClientEvents, type SocketData, type Ack,
   joinSchema, slugOnlySchema, voteSchema, cardPackSchema, nameSchema, labelSchema, toggleSchema, ejectSchema,
-  roomsStatusSchema,
+  facilitatorPassSchema, roomsStatusSchema,
   generateSlug,
 } from '@hmpp/shared';
 import { RoomStore } from './store/roomStore.js';
@@ -95,21 +95,23 @@ export function registerHandlers(io: IO, store: RoomStore): void {
       mutate(p.data.slug, cb, (s) => room.clearVote(s, socket.data.sessionId));
     });
 
+    // Reset is universal — anyone can start a new round so a room never gets stuck.
     socket.on('vote:reset', (data, cb) => {
       const p = slugOnlySchema.safeParse(data);
       if (!p.success) return cb({ error: 'Invalid payload' });
-      mutate(p.data.slug, cb, (s) =>
-        room.isAdmin(s, socket.data.sessionId) || room.votingFinished(s)
-          ? room.resetVotes(s)
-          : { error: 'Only the room admin can reset votes' });
+      mutate(p.data.slug, cb, (s) => room.resetVotes(s));
     });
 
+    // Manual reveal is universal too, but gated by a short post-round-start cooldown so a
+    // hasty reveal can't sweep still-voting people into observers.
     socket.on('reveal:force', (data, cb) => {
       const p = slugOnlySchema.safeParse(data);
       if (!p.success) return cb({ error: 'Invalid payload' });
       mutate(p.data.slug, cb, (s) => {
-        if (!room.isAdmin(s, socket.data.sessionId)) return { error: 'Only the room admin can force reveal' };
         if (!room.hasAnyVote(s)) return { error: 'There are no votes to reveal yet' };
+        if (room.manualRevealBlocked(s, Date.now())) {
+          return { error: 'Hold on — give everyone a moment to vote before revealing' };
+        }
         return room.forceReveal(s);
       });
     });
@@ -137,8 +139,8 @@ export function registerHandlers(io: IO, store: RoomStore): void {
       if (!p.success) return cb({ error: 'Invalid payload' });
       mutate(p.data.slug, cb, (s) => {
         const isSelf = socket.data.sessionId === p.data.targetSessionId;
-        if (!isSelf && !room.isAdmin(s, socket.data.sessionId)) {
-          return { error: 'Only the room admin can toggle voter status' };
+        if (!isSelf && !room.isFacilitator(s, socket.data.sessionId)) {
+          return { error: 'Only the facilitator can change someone else’s voter status' };
         }
         return room.toggleVoter(s, p.data.targetSessionId, p.data.voter);
       });
@@ -148,9 +150,33 @@ export function registerHandlers(io: IO, store: RoomStore): void {
       const p = ejectSchema.safeParse(data);
       if (!p.success) return cb({ error: 'Invalid payload' });
       mutate(p.data.slug, cb, (s) =>
-        room.isAdmin(s, socket.data.sessionId)
+        room.isFacilitator(s, socket.data.sessionId)
           ? room.setEjectOnLeave(s, p.data.ejectOnLeave)
-          : { error: 'Only the room admin can change this' });
+          : { error: 'Only the facilitator can change this' });
+    });
+
+    socket.on('facilitator:claim', (data, cb) => {
+      const p = slugOnlySchema.safeParse(data);
+      if (!p.success) return cb({ error: 'Invalid payload' });
+      mutate(p.data.slug, cb, (s) =>
+        room.facilitatorClaimable(s)
+          ? room.claimFacilitator(s, socket.data.sessionId)
+          : { error: 'Someone is already facilitating this room' });
+    });
+
+    socket.on('facilitator:pass', (data, cb) => {
+      const p = facilitatorPassSchema.safeParse(data);
+      if (!p.success) return cb({ error: 'Invalid payload' });
+      mutate(p.data.slug, cb, (s) => {
+        if (!room.isFacilitator(s, socket.data.sessionId)) {
+          return { error: 'Only the facilitator can pass the role' };
+        }
+        const target = s.connections[p.data.targetSessionId];
+        if (!target || target.socketIds.length === 0) {
+          return { error: 'Pick someone who is currently in the room' };
+        }
+        return room.passFacilitator(s, p.data.targetSessionId);
+      });
     });
 
     socket.on('disconnecting', async () => {

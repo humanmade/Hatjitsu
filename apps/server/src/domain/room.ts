@@ -1,13 +1,14 @@
 import {
   type RoomState, type Connection, type PublicRoom, type Vote, type RoomStatus,
-  colorForSession, generateName, uniquifyName,
+  REVEAL_COOLDOWN_MS, colorForSession, generateName, uniquifyName,
 } from '@hmpp/shared';
 
 const clone = (s: RoomState): RoomState => structuredClone(s);
 
 export function createRoom(slug: string): RoomState {
+  const now = Date.now();
   return {
-    slug, mode: 'live', createdAt: Date.now(), adminSessionId: null,
+    slug, mode: 'live', createdAt: now, facilitatorSessionId: null, roundStartedAt: now,
     cardPack: '135 set', revealed: false, roundLabel: '', history: [], connections: {},
     ejectOnLeave: true,
   };
@@ -24,9 +25,25 @@ const allVotersVoted = (s: RoomState): boolean => {
   return voters.length > 0 && voters.every((v) => v.vote !== null && v.vote !== undefined);
 };
 
+/** On reveal, switch any voter who didn't cast a vote to an observer, flagged so the client
+ * can nudge them to rejoin. Generalises "disconnected voters don't block" to "absent/idle
+ * voters become observers", so the next round auto-reveals cleanly. Mutates the clone. */
+const sweepNonVoters = (next: RoomState): void => {
+  for (const c of Object.values(next.connections)) {
+    if (c.voter && (c.vote === null || c.vote === undefined)) {
+      c.voter = false;
+      c.vote = null;
+      c.autoDemoted = true;
+    }
+  }
+};
+
 /** Latch the round to revealed once every connected voter has voted. Mutates the clone. */
 const maybeReveal = (next: RoomState): RoomState => {
-  if (!next.revealed && allVotersVoted(next)) next.revealed = true;
+  if (!next.revealed && allVotersVoted(next)) {
+    next.revealed = true;
+    sweepNonVoters(next);
+  }
   return next;
 };
 
@@ -55,7 +72,9 @@ export function enter(
       socketIds: [opts.socketId],
     };
   }
-  if (!next.adminSessionId) next.adminSessionId = opts.sessionId;
+  // Only a genuinely vacant seat (fresh room) auto-fills — the creator becomes facilitator.
+  // A seat held by a now-absent person is NOT auto-handed to a joiner; it must be claimed.
+  if (!next.facilitatorSessionId) next.facilitatorSessionId = opts.sessionId;
   return next;
 }
 
@@ -67,11 +86,8 @@ export function leave(s: RoomState, socketId: string, ejectOnLeave = true): Room
   if (conn.socketIds.length === 0) {
     // Eject: drop them from the roster. Keep: retain them as a disconnected participant.
     if (ejectOnLeave) delete next.connections[conn.sessionId];
-    // Either way, hand admin to a still-connected participant if the admin just left.
-    if (next.adminSessionId === conn.sessionId) {
-      const nextAdmin = activeConnections(next)[0];
-      next.adminSessionId = nextAdmin ? nextAdmin.sessionId : null;
-    }
+    // The facilitator seat is deliberately NOT reassigned here: while its holder is gone it
+    // simply becomes claimable (see facilitatorClaimable), and they reclaim it on return.
   }
   // A voter leaving may complete the round for everyone who remains.
   return maybeReveal(next);
@@ -105,14 +121,16 @@ export function resetVotes(s: RoomState): RoomState {
     });
   }
   next.roundLabel = '';
-  for (const c of Object.values(next.connections)) c.vote = null;
+  for (const c of Object.values(next.connections)) { c.vote = null; c.autoDemoted = false; }
   next.revealed = false;
+  next.roundStartedAt = Date.now();
   return next;
 }
 
 export function forceReveal(s: RoomState): RoomState {
   const next = clone(s);
   next.revealed = true;
+  sweepNonVoters(next);
   return next;
 }
 
@@ -122,6 +140,7 @@ export function toggleVoter(s: RoomState, sessionId: string, voter: boolean): Ro
   if (conn) {
     conn.voter = voter;
     if (!voter) conn.vote = null;
+    conn.autoDemoted = false; // an explicit voter/observer choice resolves the rejoin nudge
   }
   // Making the last non-voter an observer can complete the round.
   return maybeReveal(next);
@@ -139,8 +158,9 @@ export function setCardPack(s: RoomState, cardPack: string): RoomState {
   next.cardPack = cardPack;
   // A new deck invalidates the current votes (e.g. a "banana" vote can't carry into a
   // numeric deck), so changing the pack clears the round.
-  for (const c of Object.values(next.connections)) c.vote = null;
+  for (const c of Object.values(next.connections)) { c.vote = null; c.autoDemoted = false; }
   next.revealed = false;
+  next.roundStartedAt = Date.now();
   return next;
 }
 
@@ -156,9 +176,10 @@ export function setEjectOnLeave(s: RoomState, ejectOnLeave: boolean): RoomState 
     for (const [sid, c] of Object.entries(next.connections)) {
       if (c.socketIds.length === 0) delete next.connections[sid];
     }
-    if (next.adminSessionId && !next.connections[next.adminSessionId]) {
-      const nextAdmin = activeConnections(next)[0];
-      next.adminSessionId = nextAdmin ? nextAdmin.sessionId : null;
+    // If the facilitator was one of the purged absentees, the seat goes vacant (claimable),
+    // not silently to whoever happens to be online.
+    if (next.facilitatorSessionId && !next.connections[next.facilitatorSessionId]) {
+      next.facilitatorSessionId = null;
     }
   }
   return next;
@@ -171,7 +192,7 @@ export function purgeStalePresence(s: RoomState): RoomState {
   for (const c of Object.values(next.connections)) c.socketIds = [];
   if (next.ejectOnLeave) {
     next.connections = {};
-    next.adminSessionId = null;
+    next.facilitatorSessionId = null;
   }
   return next;
 }
@@ -184,8 +205,38 @@ export function clientCount(s: RoomState): number {
   return activeConnections(s).length;
 }
 
-export function isAdmin(s: RoomState, sessionId: string | undefined): boolean {
-  return !!sessionId && s.adminSessionId === sessionId;
+export function isFacilitator(s: RoomState, sessionId: string | undefined): boolean {
+  return !!sessionId && s.facilitatorSessionId === sessionId;
+}
+
+/** The seat may be taken when it's vacant, or when its holder has left the roster, or when
+ * they're present but have no live tab open (disconnected). A connected holder keeps it. */
+export function facilitatorClaimable(s: RoomState): boolean {
+  const holderId = s.facilitatorSessionId;
+  if (!holderId) return true;
+  const holder = s.connections[holderId];
+  return !holder || holder.socketIds.length === 0;
+}
+
+/** Take the facilitator seat. The caller must first check `facilitatorClaimable`. */
+export function claimFacilitator(s: RoomState, sessionId: string): RoomState {
+  const next = clone(s);
+  next.facilitatorSessionId = sessionId;
+  return next;
+}
+
+/** Hand the seat to another participant. The caller must verify the passer currently holds
+ * it and the target is a present participant. */
+export function passFacilitator(s: RoomState, targetSessionId: string): RoomState {
+  const next = clone(s);
+  next.facilitatorSessionId = targetSessionId;
+  return next;
+}
+
+/** True while a manual reveal is still on cooldown (the opening window of a round, when
+ * people are still casting). Auto-reveal is never subject to this. */
+export function manualRevealBlocked(s: RoomState, now: number): boolean {
+  return now - s.roundStartedAt < REVEAL_COOLDOWN_MS;
 }
 
 export function publicView(s: RoomState): PublicRoom {
@@ -207,13 +258,15 @@ export function publicView(s: RoomState): PublicRoom {
     : [];
 
   return {
-    slug: s.slug, mode: s.mode, adminSessionId: s.adminSessionId, cardPack: s.cardPack,
+    slug: s.slug, mode: s.mode, facilitatorSessionId: s.facilitatorSessionId,
+    roundStartedAt: s.roundStartedAt, cardPack: s.cardPack,
     revealed, roundLabel: s.roundLabel, history: s.history,
     votes, ejectOnLeave: s.ejectOnLeave,
     connections: roster.map((c) => ({
       sessionId: c.sessionId, name: c.name, color: c.color, voter: c.voter,
       hasVoted: c.vote !== null && c.vote !== undefined,
       connected: c.socketIds.length > 0,
+      autoDemoted: !!c.autoDemoted,
     })),
   };
 }

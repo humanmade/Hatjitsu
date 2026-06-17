@@ -28,10 +28,10 @@ const status = (s: Socket, sessionId: string, slugs: string[]) =>
     s.emit('rooms:status', { sessionId, slugs }, res as never));
 
 describe('socket handlers', () => {
-  it('first joiner becomes admin and gets a public room', async () => {
+  it('first joiner becomes facilitator and gets a public room', async () => {
     const a = connect();
     const room = await join(a, 'happy-otter', 'sess-a');
-    expect(room.adminSessionId).toBe('sess-a');
+    expect(room.facilitatorSessionId).toBe('sess-a');
     a.close();
   });
 
@@ -48,12 +48,51 @@ describe('socket handlers', () => {
     a.close(); b.close();
   });
 
-  it('rejects force-reveal from a non-admin', async () => {
+  it('rejects a manual reveal during the opening cooldown window', async () => {
+    const a = connect(); const b = connect();
+    await join(a, 'r', 'sa'); await join(b, 'r', 'sb');
+    await new Promise<void>((res) => a.emit('vote', { slug: 'r', vote: '5' }, () => res()));
+    const res: { ok: true } | { error: string } = await new Promise((resolve) =>
+      b.emit('reveal:force', { slug: 'r' }, resolve as never));
+    expect('error' in res).toBe(true); // any participant may reveal, but not in the first 10s
+    a.close(); b.close();
+  });
+
+  it('lets any participant reset votes (no longer facilitator-gated)', async () => {
     const a = connect(); const b = connect();
     await join(a, 'r', 'sa'); await join(b, 'r', 'sb');
     const res: { ok: true } | { error: string } = await new Promise((resolve) =>
-      b.emit('reveal:force', { slug: 'r' }, resolve as never));
+      b.emit('vote:reset', { slug: 'r' }, resolve as never));
+    expect(res).toEqual({ ok: true });
+    a.close(); b.close();
+  });
+
+  it('rejects claiming the facilitator seat while a connected facilitator holds it', async () => {
+    const a = connect(); const b = connect();
+    await join(a, 'r', 'sa'); await join(b, 'r', 'sb');
+    const res: { ok: true } | { error: string } = await new Promise((resolve) =>
+      b.emit('facilitator:claim', { slug: 'r' }, resolve as never));
     expect('error' in res).toBe(true);
+    a.close(); b.close();
+  });
+
+  it('rejects passing the facilitator seat from a non-facilitator', async () => {
+    const a = connect(); const b = connect();
+    await join(a, 'r', 'sa'); await join(b, 'r', 'sb');
+    const res: { ok: true } | { error: string } = await new Promise((resolve) =>
+      b.emit('facilitator:pass', { slug: 'r', targetSessionId: 'sa' }, resolve as never));
+    expect('error' in res).toBe(true);
+    a.close(); b.close();
+  });
+
+  it('lets the facilitator pass the seat to another connected participant', async () => {
+    const a = connect(); const b = connect();
+    await join(a, 'r', 'sa'); await join(b, 'r', 'sb');
+    const res: PublicRoom = await new Promise((resolve) => {
+      b.on('room:update', resolve);
+      a.emit('facilitator:pass', { slug: 'r', targetSessionId: 'sb' }, () => {});
+    });
+    expect(res.facilitatorSessionId).toBe('sb');
     a.close(); b.close();
   });
 });
