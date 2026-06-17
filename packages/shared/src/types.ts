@@ -67,6 +67,7 @@ export type RoomStatus =
   | {
       slug: string;
       active: true;
+      connected: boolean; // you have a live tab open in this room right now
       voter: boolean;
       hasVoted: boolean;
       revealed: boolean;

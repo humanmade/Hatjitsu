@@ -226,6 +226,7 @@ export function statusFor(s: RoomState, sessionId: string): RoomStatus {
   return {
     slug: s.slug,
     active: true,
+    connected: conn.socketIds.length > 0,
     voter: conn.voter,
     hasVoted: conn.vote !== null && conn.vote !== undefined,
     revealed: s.revealed,

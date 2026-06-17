@@ -140,7 +140,7 @@ describe('statusFor', () => {
 
   it('returns standing for a member who has not voted', () => {
     expect(statusFor(withMember(), 'sa')).toEqual({
-      slug: 'happy-otter', active: true, voter: true, hasVoted: false,
+      slug: 'happy-otter', active: true, connected: true, voter: true, hasVoted: false,
       revealed: false, roundLabel: '', count: 1,
     });
   });
