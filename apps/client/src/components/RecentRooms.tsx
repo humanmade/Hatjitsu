@@ -25,11 +25,14 @@ export function RecentRooms({
 }) {
   if (rooms.length === 0) return null;
   return (
-    <section className="mx-auto mt-6 w-full max-w-md" aria-label="Recent rooms">
+    <section className="w-full md:w-80" aria-label="Recent rooms">
       <h2 className="mb-2 text-sm font-medium opacity-70">Recent rooms</h2>
       <ul className="flex flex-col gap-2">
         {rooms.map((r) => {
           const gone = r.status.active === false;
+          // You can only forget a room you've actually left — hide the dismiss while you
+          // still have a live tab open in it, so you don't "close" a room you're using.
+          const here = r.status.active === true && r.status.connected;
           return (
             <li
               key={r.slug}
@@ -39,14 +42,16 @@ export function RecentRooms({
                 <span className="block truncate font-medium">{r.slug}</span>
                 <Standing status={r.status} />
               </Link>
-              <button
-                type="button"
-                onClick={() => onForget(r.slug)}
-                aria-label={`Remove ${r.slug}`}
-                className="rounded p-1 opacity-60 hover:opacity-100"
-              >
-                <X size={16} />
-              </button>
+              {!here && (
+                <button
+                  type="button"
+                  onClick={() => onForget(r.slug)}
+                  aria-label={`Remove ${r.slug}`}
+                  className="rounded p-1 opacity-60 hover:opacity-100"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </li>
           );
         })}

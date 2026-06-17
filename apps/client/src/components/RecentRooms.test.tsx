@@ -23,11 +23,18 @@ describe('RecentRooms', () => {
 
   it('shows an active room with its standing and a Voted badge', () => {
     renderList([
-      view({ slug: 'happy-otter', status: { slug: 'happy-otter', active: true, voter: true, hasVoted: true, revealed: false, roundLabel: 'PROJ-1', count: 3 } }),
+      view({ slug: 'happy-otter', status: { slug: 'happy-otter', active: true, connected: false, voter: true, hasVoted: true, revealed: false, roundLabel: 'PROJ-1', count: 3 } }),
     ]);
     expect(screen.getByRole('link', { name: /happy-otter/ })).toHaveAttribute('href', '/room/happy-otter');
     expect(screen.getByText(/Voted/)).toBeInTheDocument();
     expect(screen.getByText(/PROJ-1/)).toBeInTheDocument();
+  });
+
+  it('hides the dismiss button while you have a live tab open in the room', () => {
+    renderList([
+      view({ slug: 'in-use', status: { slug: 'in-use', active: true, connected: true, voter: true, hasVoted: false, revealed: false, roundLabel: '', count: 2 } }),
+    ]);
+    expect(screen.queryByRole('button', { name: /remove in-use/i })).toBeNull();
   });
 
   it('greys inactive rooms and dismiss calls onForget', () => {

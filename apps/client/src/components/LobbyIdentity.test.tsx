@@ -14,8 +14,8 @@ describe('LobbyIdentity', () => {
     expect(getStoredName()).toBe('Tom');
   });
 
-  it('shows a colour swatch', () => {
+  it('greets the user', () => {
     render(<LobbyIdentity />);
-    expect(screen.getByTestId('identity-swatch')).toBeInTheDocument();
+    expect(screen.getByText(/hello/i)).toBeInTheDocument();
   });
 });
