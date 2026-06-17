@@ -1,5 +1,5 @@
 import {
-  type RoomState, type Connection, type PublicRoom, type Vote,
+  type RoomState, type Connection, type PublicRoom, type Vote, type RoomStatus,
   colorForSession, generateName, uniquifyName,
 } from '@hmpp/shared';
 
@@ -215,5 +215,21 @@ export function publicView(s: RoomState): PublicRoom {
       hasVoted: c.vote !== null && c.vote !== undefined,
       connected: c.socketIds.length > 0,
     })),
+  };
+}
+
+/** Membership-gated standing for `rooms:status`. Returns `active:false` unless `sessionId`
+ * is in the roster, so a non-member cannot distinguish it from a non-existent room. */
+export function statusFor(s: RoomState, sessionId: string): RoomStatus {
+  const conn = s.connections[sessionId];
+  if (!conn) return { slug: s.slug, active: false };
+  return {
+    slug: s.slug,
+    active: true,
+    voter: conn.voter,
+    hasVoted: conn.vote !== null && conn.vote !== undefined,
+    revealed: s.revealed,
+    roundLabel: s.roundLabel,
+    count: Object.keys(s.connections).length,
   };
 }

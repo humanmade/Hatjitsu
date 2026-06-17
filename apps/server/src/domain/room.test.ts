@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   createRoom, enter, leave, recordVote, clearVote, resetVotes,
   forceReveal, toggleVoter, setCardPack, setEjectOnLeave, purgeStalePresence,
-  isAdmin, votingFinished, clientCount, publicView,
+  isAdmin, votingFinished, clientCount, publicView, statusFor,
 } from './room';
 
 const join = (state: ReturnType<typeof createRoom>, sessionId: string, socketId: string, voter = true) =>
@@ -124,5 +124,30 @@ describe('Room domain', () => {
     const purged = purgeStalePresence(keepRoom);
     expect(purged.connections['a']).toBeDefined();
     expect(purged.connections['a'].socketIds).toHaveLength(0);
+  });
+});
+
+describe('statusFor', () => {
+  const withMember = () => {
+    let s = createRoom('happy-otter');
+    s = enter(s, { sessionId: 'sa', socketId: 'x', voter: true });
+    return s;
+  };
+
+  it('returns active:false when the session is not in the roster', () => {
+    expect(statusFor(createRoom('r'), 'nobody')).toEqual({ slug: 'r', active: false });
+  });
+
+  it('returns standing for a member who has not voted', () => {
+    expect(statusFor(withMember(), 'sa')).toEqual({
+      slug: 'happy-otter', active: true, voter: true, hasVoted: false,
+      revealed: false, roundLabel: '', count: 1,
+    });
+  });
+
+  it('reports hasVoted once the member has voted', () => {
+    const s = recordVote(withMember(), 'sa', '5');
+    const r = statusFor(s, 'sa');
+    expect(r).toMatchObject({ active: true, hasVoted: true, revealed: true }); // lone voter auto-reveals
   });
 });
