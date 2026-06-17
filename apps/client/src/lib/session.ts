@@ -24,3 +24,36 @@ export function getStoredRole(): boolean | null {
 export function setStoredRole(voter: boolean): void {
   localStorage.setItem(ROLE, String(voter));
 }
+
+const ROOMS = 'hmpp:rooms';
+const ROOMS_CAP = 12;
+
+export interface RecentRoom { slug: string; lastJoinedAt: number }
+
+/** Rooms this browser has joined, most-recent first. Tolerant of corrupt storage. */
+export function getRecentRooms(): RecentRoom[] {
+  try {
+    const raw = localStorage.getItem(ROOMS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((r) => r && typeof r.slug === 'string');
+  } catch {
+    return [];
+  }
+}
+
+/** Record a join: move/insert the slug at the front, dedupe, cap at 12. */
+export function rememberRoom(slug: string): void {
+  const next = [{ slug, lastJoinedAt: Date.now() }, ...getRecentRooms().filter((r) => r.slug !== slug)]
+    .slice(0, ROOMS_CAP);
+  localStorage.setItem(ROOMS, JSON.stringify(next));
+}
+
+export function forgetRoom(slug: string): void {
+  localStorage.setItem(ROOMS, JSON.stringify(getRecentRooms().filter((r) => r.slug !== slug)));
+}
+
+export function clearRecentRooms(): void {
+  localStorage.removeItem(ROOMS);
+}
