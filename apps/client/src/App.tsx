@@ -5,6 +5,7 @@ import { Room } from './pages/Room';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import { NotifyToggle } from './components/NotifyToggle';
 import { FacilitatorMenu } from './components/FacilitatorMenu';
+import { RoomLink } from './components/RoomLink';
 import { useSocketDown } from './lib/useConnection';
 import { cn } from './lib/utils';
 
@@ -14,12 +15,15 @@ export default function App() {
   return (
     <div className="min-h-screen">
       {down && <ConnectionStatus />}
-      <header className="flex items-center justify-between p-4">
-        <a href="/" className="group flex items-center gap-2.5 text-lg font-semibold tracking-tight">
+      <header className="flex items-center gap-2 p-4">
+        <a href="/" className="group flex shrink-0 items-center gap-2.5 text-lg font-semibold tracking-tight">
           <img src="/hm-mark-red.svg" alt="Human Made" className="h-6 w-auto" />
-          <span className="transition-colors group-hover:text-primary">Planning Poker</span>
+          <span className="hidden transition-colors group-hover:text-primary sm:inline">Planning Poker</span>
         </a>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 justify-center">
+          <RoomLink />
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
           <FacilitatorMenu />
           <NotifyToggle />
           <ThemeToggle />

@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { Check } from 'lucide-react';
+import { Check, Layers, DoorOpen, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { DECKS, chooseCardPack } from '@hmpp/shared';
@@ -22,7 +22,10 @@ export function FacilitatorMenu() {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>Deck: {room.cardPack}</DropdownMenuTrigger>
+        <DropdownMenuTrigger render={<Button variant="outline" size="sm" aria-label="Choose deck" className="gap-1.5" />}>
+          <Layers className="size-4" />
+          <span className="hidden sm:inline">Deck: {room.cardPack}</span>
+        </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72">
           {Object.keys(DECKS).map((name) => (
             <DropdownMenuItem
@@ -41,8 +44,9 @@ export function FacilitatorMenu() {
       </DropdownMenu>
 
       <DropdownMenu>
-        <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>
-          When a voter leaves: {room.ejectOnLeave ? 'Eject' : 'Keep'}
+        <DropdownMenuTrigger render={<Button variant="outline" size="sm" aria-label="When a voter leaves" className="gap-1.5" />}>
+          <DoorOpen className="size-4" />
+          <span className="hidden sm:inline">When a voter leaves: {room.ejectOnLeave ? 'Eject' : 'Keep'}</span>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-80">
           <DropdownMenuItem
@@ -68,7 +72,10 @@ export function FacilitatorMenu() {
 
       {targets.length > 0 && (
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="outline" size="sm" />}>Pass facilitator</DropdownMenuTrigger>
+          <DropdownMenuTrigger render={<Button variant="outline" size="sm" aria-label="Pass facilitator" className="gap-1.5" />}>
+            <ArrowRightLeft className="size-4" />
+            <span className="hidden sm:inline">Pass facilitator</span>
+          </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56">
             {targets.map((c) => (
               <DropdownMenuItem key={c.sessionId} onClick={() => socket.emit('facilitator:pass', { slug, targetSessionId: c.sessionId }, ack)}>

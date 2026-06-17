@@ -112,7 +112,6 @@ export function Room() {
 
   return (
     <div className="flex flex-col items-center gap-10 pt-12 pb-6 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500 motion-safe:ease-out">
-      <h1 className="text-base font-medium tracking-tight text-muted-foreground">Room: {room.slug}</h1>
       {/* Top "table": who has voted while open; the anonymous results once revealed.
           AutoHeight grows/shrinks the table smoothly as the small voter cards swap for
           the larger revealed cards, instead of snapping to the new height. */}
