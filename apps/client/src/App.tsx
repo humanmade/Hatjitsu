@@ -15,15 +15,15 @@ export default function App() {
   return (
     <div className="min-h-screen">
       {down && <ConnectionStatus />}
-      <header className="flex items-center gap-2 p-4">
+      <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 p-4">
         <a href="/" className="group flex shrink-0 items-center gap-2.5 text-lg font-semibold tracking-tight">
           <img src="/hm-mark-red.svg" alt="Human Made" className="h-6 w-auto" />
           <span className="hidden transition-colors group-hover:text-primary sm:inline">Planning Poker</span>
         </a>
-        <div className="flex min-w-0 flex-1 justify-center">
+        <div className="flex min-w-0 justify-center">
           <RoomLink />
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center justify-self-end gap-1">
           <FacilitatorMenu />
           <NotifyToggle />
           <ThemeToggle />

@@ -47,24 +47,31 @@ export function Participants({
               }
               title={`${c.name}${c.voter ? '' : ' (observer)'}${c.connected ? '' : ' (away)'}`}
             >
-              {voted ? (
-                <Check className="size-8 motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-200" />
-              ) : !c.voter ? (
-                <Eye className="size-5" />
-              ) : (
-                <span className="flex gap-1" aria-label="waiting to vote">
-                  {[0, 1, 2].map((i) => (
-                    <span
-                      key={i}
-                      className="size-1.5 rounded-full motion-safe:animate-pulse"
-                      style={{
-                        backgroundColor: `color-mix(in oklab, ${c.color}, var(--foreground) 40%)`,
-                        animationDelay: `${i * 160}ms`,
-                      }}
-                    />
-                  ))}
-                </span>
-              )}
+              {/* Key on the glyph state so toggling observer↔voter (and voting) remounts this
+                  wrapper, replaying the enter animation instead of hard-swapping the icon. */}
+              <span
+                key={voted ? 'voted' : c.voter ? 'waiting' : 'observer'}
+                className="inline-flex motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-75 motion-safe:duration-200"
+              >
+                {voted ? (
+                  <Check className="size-8" />
+                ) : !c.voter ? (
+                  <Eye className="size-5" />
+                ) : (
+                  <span className="flex gap-1" aria-label="waiting to vote">
+                    {[0, 1, 2].map((i) => (
+                      <span
+                        key={i}
+                        className="size-1.5 rounded-full motion-safe:animate-pulse"
+                        style={{
+                          backgroundColor: `color-mix(in oklab, ${c.color}, var(--foreground) 40%)`,
+                          animationDelay: `${i * 160}ms`,
+                        }}
+                      />
+                    ))}
+                  </span>
+                )}
+              </span>
             </div>
             <span className="flex max-w-full items-center gap-1.5">
               {c.sessionId === facilitatorSessionId && (

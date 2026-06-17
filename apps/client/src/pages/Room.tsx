@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { socket } from '@/lib/socket';
+import { cn } from '@/lib/utils';
 import { getSessionId, getStoredName, setStoredName, getStoredRole, setStoredRole, rememberRoom } from '@/lib/session';
 import { useRoom } from '@/store/useRoom';
 import { useRoomNotifications } from '@/lib/useRoomNotifications';
@@ -61,6 +62,31 @@ export function Room() {
   useRoomNotifications(room);
   useRoomEventToasts(room, sessionId);
   const idlePhase = useIdlePhase(room);
+
+  // Sequence the deck's appearance to mirror its exit. Entering: it's mounted but invisible at
+  // full height, so AutoHeight expands the space FIRST, then it fades in. Leaving: it fades out
+  // FIRST, then unmounts so AutoHeight collapses the freed space. Each leg runs ~200ms. Voter
+  // status is read here (above the early returns) so the hook order stays stable.
+  const meVoter = !!room?.connections.find((c) => c.sessionId === sessionId)?.voter;
+  const [deckPhase, setDeckPhase] = useState<'out' | 'entering' | 'shown' | 'leaving'>(
+    meVoter ? 'shown' : 'out',
+  );
+  // Trigger: start an enter or leave whenever our voter status flips.
+  useEffect(() => {
+    if (meVoter) setDeckPhase((p) => (p === 'shown' ? p : 'entering'));
+    else setDeckPhase((p) => (p === 'out' ? p : 'leaving'));
+  }, [meVoter]);
+  // Advance: after each transient leg settles, move to the resting phase.
+  useEffect(() => {
+    if (deckPhase === 'entering') {
+      const t = setTimeout(() => setDeckPhase((p) => (p === 'entering' ? 'shown' : p)), 200);
+      return () => clearTimeout(t);
+    }
+    if (deckPhase === 'leaving') {
+      const t = setTimeout(() => setDeckPhase((p) => (p === 'leaving' ? 'out' : p)), 200);
+      return () => clearTimeout(t);
+    }
+  }, [deckPhase]);
 
   const join = (voter: boolean) => {
     setStoredRole(voter);
@@ -135,7 +161,23 @@ export function Room() {
           Start new vote
         </Button>
       )}
-      {me?.voter && <Deck cardPack={room.cardPack} myVote={myCurrentVote} onPick={pick} disabled={room.revealed} />}
+      {/* Grow/collapse the deck slot when toggling voter↔observer instead of snapping the
+          layout. The -mt-10 cancels this section's top flex gap and the inner pt-10 restores
+          it as measured height, so collapsing folds the gap away with no residual whitespace. */}
+      <AutoHeight className="-mt-10">
+        {deckPhase !== 'out' && (
+          <div
+            className={cn(
+              'pt-10 motion-safe:transition-[opacity,transform] motion-safe:duration-200 motion-safe:ease-out',
+              // 'shown' is the only visible state; 'entering' (pre-expand) and 'leaving' both
+              // sit hidden + nudged down, so it slides up in and back down out.
+              deckPhase === 'shown' ? 'opacity-100' : 'motion-safe:opacity-0 motion-safe:translate-y-2',
+            )}
+          >
+            <Deck cardPack={room.cardPack} myVote={myCurrentVote} onPick={pick} disabled={room.revealed} />
+          </div>
+        )}
+      </AutoHeight>
       <RoomControls room={room} sessionId={sessionId} />
       <History room={room} />
       <Fireworks room={room} />
