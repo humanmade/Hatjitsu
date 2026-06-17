@@ -29,10 +29,20 @@ export function Participants({
                 'grid aspect-[5/7] w-full place-items-center rounded-xl border-2 shadow-sm',
                 'motion-safe:transition-all motion-safe:duration-200 motion-safe:ease-out',
                 'hover:shadow-lg motion-safe:hover:-translate-y-1.5 motion-safe:hover:scale-[1.03]',
+                // Waiting/observer: a soft "card back" matching the deck (neutral border + tint),
+                // not a hard saturated outline. The bold filled card is reserved for "voted".
+                !voted && 'border-border',
                 !c.voter && 'opacity-60',
                 !c.connected && 'opacity-45', // away: tab closed, kept in the roster
               )}
-              style={voted ? { background: c.color, borderColor: c.color, color: '#fff' } : { borderColor: c.color, color: c.color }}
+              style={
+                voted
+                  ? { background: c.color, borderColor: c.color, color: '#fff' }
+                  : {
+                      background: `color-mix(in oklab, ${c.color} 12%, var(--card))`,
+                      color: `color-mix(in oklab, ${c.color}, var(--foreground) 40%)`,
+                    }
+              }
               title={`${c.name}${c.voter ? '' : ' (observer)'}${c.connected ? '' : ' (away)'}`}
             >
               {voted ? (

@@ -8,6 +8,7 @@ import { socket } from '@/lib/socket';
 import { getSessionId, getStoredName, setStoredName, getStoredRole, setStoredRole, rememberRoom } from '@/lib/session';
 import { useRoom } from '@/store/useRoom';
 import { useRoomNotifications } from '@/lib/useRoomNotifications';
+import { AutoHeight } from '@/components/AutoHeight';
 import { Deck } from '@/components/Deck';
 import { Participants } from '@/components/Participants';
 import { RevealedVotes } from '@/components/RevealedVotes';
@@ -109,14 +110,18 @@ export function Room() {
   return (
     <div className="flex flex-col items-center gap-10 pt-12 pb-6 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500 motion-safe:ease-out">
       <h1 className="text-base font-medium tracking-tight text-muted-foreground">Room: {room.slug}</h1>
-      {/* Top "table": who has voted while open; the anonymous results once revealed. */}
-      <div className="py-12">
-        {room.revealed ? (
-          <RevealedVotes votes={room.votes} highlight={revealHighlight} />
-        ) : (
-          <Participants connections={room.connections} idlePhase={idlePhase} />
-        )}
-      </div>
+      {/* Top "table": who has voted while open; the anonymous results once revealed.
+          AutoHeight grows/shrinks the table smoothly as the small voter cards swap for
+          the larger revealed cards, instead of snapping to the new height. */}
+      <AutoHeight>
+        <div className="py-12">
+          {room.revealed ? (
+            <RevealedVotes votes={room.votes} highlight={revealHighlight} />
+          ) : (
+            <Participants connections={room.connections} idlePhase={idlePhase} />
+          )}
+        </div>
+      </AutoHeight>
       <Results room={room} />
       {room.revealed && (
         <Button
