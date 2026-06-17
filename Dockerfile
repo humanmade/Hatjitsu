@@ -22,10 +22,10 @@ RUN npm ci --omit=dev --workspace @hmpp/server --workspace @hmpp/shared
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/apps/server/dist apps/server/dist
 COPY --from=build /app/apps/client/dist apps/server/dist/public
-# Run as uid/gid 33 (www-data) to match the tools.hmn.md EFS access point,
-# which creates /data owned by 33:33 (mode 755). A different uid cannot write to it.
-RUN mkdir -p /data && chown 33:33 /data
-USER 33:33
+# Runs as root (like other tools.hmn.md apps): root binds port 80 and writes
+# to the EFS-backed /data mount, which is owned by uid 33 (the platform's access
+# point) but writable by root since EFS does not squash root.
+RUN mkdir -p /data
 VOLUME ["/data"]
 ENV PORT=80
 ENV DATA_DIR=/data
