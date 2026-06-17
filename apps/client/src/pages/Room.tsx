@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { socket } from '@/lib/socket';
-import { getSessionId, getStoredName, setStoredName, getStoredRole, setStoredRole } from '@/lib/session';
+import { getSessionId, getStoredName, setStoredName, getStoredRole, setStoredRole, rememberRoom } from '@/lib/session';
 import { useRoom } from '@/store/useRoom';
 import { useRoomNotifications } from '@/lib/useRoomNotifications';
 import { Deck } from '@/components/Deck';
@@ -41,6 +41,7 @@ export function Room() {
       socket.emit('room:join', { slug, sessionId, voter: roleRef.current, name: getStoredName() }, (res) => {
         if ('error' in res) { toast.error(res.error); return; }
         remember(res);
+        rememberRoom(slug);
         setMyVote(res.yourVote != null ? String(res.yourVote) : null); // restore own highlight
       });
     };
@@ -65,6 +66,7 @@ export function Room() {
       setRoom(res);
       const mine = res.connections.find((c) => c.sessionId === sessionId);
       if (mine) setStoredName(mine.name);
+      rememberRoom(slug);
       setMyVote(res.yourVote != null ? String(res.yourVote) : null);
     });
   };
