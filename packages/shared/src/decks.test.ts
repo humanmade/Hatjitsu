@@ -6,7 +6,7 @@ describe('chooseCardPack', () => {
     expect(chooseCardPack('135 set')).toEqual(['1', '3', '5', '8', '13', '21', '?']);
   });
   it('returns the T-Shirt deck', () => {
-    expect(chooseCardPack('T-Shirt')).toEqual(['XL', 'L', 'M', 'S', 'XS', '?']);
+    expect(chooseCardPack('T-Shirt')).toEqual(['XS', 'S', 'M', 'L', 'XL', '?']);
   });
   it('splits a custom comma string into a deck', () => {
     expect(chooseCardPack('a,b,c')).toEqual(['a', 'b', 'c']);
