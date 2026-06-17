@@ -2,11 +2,14 @@ import type { Server, Socket } from 'socket.io';
 import {
   type ClientToServerEvents, type ServerToClientEvents, type SocketData, type Ack,
   joinSchema, slugOnlySchema, voteSchema, cardPackSchema, nameSchema, labelSchema, toggleSchema, ejectSchema,
+  roomsStatusSchema,
   generateSlug,
 } from '@hmpp/shared';
 import { RoomStore } from './store/roomStore.js';
 import * as room from './domain/room.js';
 import { logger } from './logger.js';
+import { createRateLimiter } from './rateLimit.js';
+import { RATE_LIMITS } from './config.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 type IOSocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
@@ -18,6 +21,8 @@ export function registerHandlers(io: IO, store: RoomStore): void {
   };
 
   io.on('connection', (socket: IOSocket) => {
+    const limit = createRateLimiter(RATE_LIMITS);
+
     socket.on('room:create', async (cb) => {
       let slug = generateSlug();
       for (let i = 0; i < 10 && (await store.exists(slug)); i++) slug = generateSlug();
@@ -43,11 +48,25 @@ export function registerHandlers(io: IO, store: RoomStore): void {
     });
 
     socket.on('room:info', async (data, cb) => {
+      if (!limit('room:info')) return cb({ error: 'Too many requests, slow down' });
       const parsed = slugOnlySchema.safeParse(data);
       if (!parsed.success) return cb({ error: 'Invalid payload' });
       const state = await store.load(parsed.data.slug);
       if (!state) return cb({ error: 'Sorry, this room no longer exists ...' });
       cb(room.publicView(state));
+    });
+
+    socket.on('rooms:status', async (data, cb) => {
+      if (!limit('rooms:status')) return cb({ error: 'Too many requests, slow down' });
+      const parsed = roomsStatusSchema.safeParse(data);
+      if (!parsed.success) return cb({ error: 'Invalid payload' });
+      const { sessionId, slugs } = parsed.data;
+      const results: import('@hmpp/shared').RoomStatus[] = [];
+      for (const slug of slugs.slice(0, 25)) {
+        const state = await store.load(slug);
+        results.push(state ? room.statusFor(state, sessionId) : { slug, active: false });
+      }
+      cb(results);
     });
 
     const mutate = async (
