@@ -12,6 +12,7 @@ const config: UserConfig & { test?: unknown } = {
     globals: true,
     setupFiles: ['./src/setupTests.ts'],
     exclude: ['**/node_modules/**', '**/e2e/**'],
+    alias: { '@hmpp/shared': path.resolve(__dirname, '../../packages/shared/src/index.ts') },
   },
 };
 
