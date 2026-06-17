@@ -1,7 +1,7 @@
 name: Deploy
 on:
   push:
-    branches: [main]
+    branches: [rewrite]
 permissions:
   contents: read
   packages: write
@@ -19,5 +19,5 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/humanmade/hmplanningpoker:latest
+          tags: ghcr.io/humanmade/hatjitsu:latest
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
