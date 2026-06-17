@@ -71,7 +71,6 @@ type RoomStatus =
   | {
       slug: string;
       active: true;
-      inRoster: boolean;     // is this sessionId currently a connection?
       voter: boolean;
       hasVoted: boolean;
       revealed: boolean;
@@ -80,10 +79,20 @@ type RoomStatus =
     };
 ```
 
+- **Membership gate (anti-enumeration).** Return `active: true` with standing
+  **only when `sessionId` is present in `room.connections`** for that slug.
+  Otherwise return `{ slug, active: false }`. Because `active: false` covers
+  "doesn't exist", "expired", *and* "you're not a member", a caller throwing
+  random slugs at the endpoint learns nothing — the response for a room they
+  don't belong to is identical to a non-existent one. There is no `inRoster`
+  field: an `active: true` response is by definition a room the caller is in.
 - **Read-only.** Must not create rooms, add the session to a roster, or mutate
   state. Loading via `roomStore` is fine (its normal TTL sweep is acceptable);
   do not extend or refresh a room's TTL on a status check.
-- Missing/expired room → `{ slug, active: false }`.
+- **Non-subscribing.** This is a request/response (ack) call. It must NOT call
+  `socket.join` — fetching status never subscribes the caller to a room's
+  broadcasts (see Security invariant below).
+- Missing/expired/not-a-member → `{ slug, active: false }`.
 - `RoomStatus` type + the event request/response signatures live in
   `packages/shared`.
 
@@ -106,11 +115,14 @@ Row anatomy:
 
 - **Active rows** (`active: true`), recent-first: slug (clickable →
   `/room/:slug`) · round label · participant count · vote badge
-  (**Voted** / **No vote yet**). When `inRoster: false` (you left an eject-mode
-  room that is still alive), a subtle "not in this room — rejoin" note. Still
-  clickable to rejoin.
+  (**Voted** / **No vote yet**).
 - **Greyed rows** (`active: false`), after the active ones: dimmed, with an
-  **×** to dismiss (calls `forget(slug)`).
+  **×** to dismiss (calls `forget(slug)`). `active: false` means expired, gone,
+  *or* a room you're no longer a member of (e.g. an eject-mode room you left) —
+  the status call deliberately can't tell these apart. The row stays
+  **clickable**: clicking attempts a normal `room:join`, whose ack is the
+  authoritative answer — it rejoins if the room still exists, or surfaces the
+  existing "no longer exists" error if not.
 - A small **"Clear all"** affordance at the foot (calls `clearAll()`).
 
 Clicking any row navigates to `/room/:slug`; the existing join flow restores
@@ -140,6 +152,47 @@ A compact strip inside the lobby Card, **below the "Create a room" button**:
 - Identity strip: inside the existing `Card`, below the Create button.
 - Recent rooms: a separate `<section>` beneath the Card.
 
+## Security & abuse resistance
+
+The user raised room enumeration as a concern. Findings and the response:
+
+- **Pre-existing exposure (not introduced here).** `room:info` (`sockets.ts:45`)
+  already returns the full `PublicRoom` for *any* guessed slug with no auth or
+  membership check, and slugs are low-entropy (`adjective-animal`, order of a
+  few hundred thousand combinations) with no rate limiting. This feature does
+  not widen that; addressing it fully (slug entropy, trimming `room:info` for
+  non-members) is **out of scope** — see Out of scope, flagged for a future
+  ticket.
+
+- **Membership gate on `rooms:status`** (see A2). The endpoint discloses standing
+  only for rooms where `sessionId` is in `connections`, so it adds **zero** new
+  enumeration surface even though it accepts batches of slugs.
+
+- **Rate limiting (defense-in-depth).** Add a lightweight per-socket token-bucket
+  limiter to the **read** endpoints `rooms:status` and `room:info`. Limits are
+  chosen so normal use never trips them and are tunable in one place
+  (`config.ts`). Suggested starting points: `rooms:status` ~5 calls / 10s
+  (lobby fires once on mount); `room:info` ~20 calls / 10s. Over-limit calls
+  return `{ error: 'Too many requests, slow down' }` via the ack — they do not
+  disconnect the socket.
+  - **`room:join` is explicitly exempt** from this limiter so joining rooms,
+    following shared links, and creating rooms are never throttled. (A separate,
+    much looser global guard could be considered later, but is out of scope.)
+
+- **Event-scoping invariant (already true; must be preserved).** A client
+  receives `room:update` only for rooms it has `room:join`-ed, because broadcasts
+  go solely to `io.to(slug)` and a socket enters that socket.io room only on
+  join (`sockets.ts:37`). `rooms:status` is request/response and must **not**
+  call `socket.join`, so the lobby never subscribes to any room while checking
+  status. A test asserts a socket that only calls `rooms:status` receives no
+  `room:update`.
+
+- **Note (pre-existing, out of scope):** `sessionId` is visible in
+  `PublicConnection`/`PublicRoom`, so it functions as identity rather than a
+  secret. The membership gate relies on the caller supplying *their own*
+  sessionId; supplying someone else's only reveals what `room:info` already
+  exposes. Treating sessionId as a bearer secret is a separate concern.
+
 ## Accessibility
 
 - Room rows are real links/buttons with visible text (slug as accessible name);
@@ -151,12 +204,21 @@ A compact strip inside the lobby Card, **below the "Create a room" button**:
 
 **Server (`rooms:status`):**
 - Missing/expired slug → `active: false`.
-- In-roster, voted → `active: true, inRoster: true, hasVoted: true`.
-- In-roster, not voted → `hasVoted: false`.
+- Member, voted → `active: true, hasVoted: true`.
+- Member, not voted → `active: true, hasVoted: false`.
 - Revealed round → `revealed: true`.
-- Eject-mode room the session left but still alive → `active: true,
-  inRoster: false`.
-- Slug list over the 25 cap is rejected/truncated (pick one; truncate).
+- **Membership gate:** a live room the session is *not* a member of →
+  `active: false` (indistinguishable from non-existent).
+- **Eject-mode room the session left** (removed from `connections`) →
+  `active: false`.
+- Slug list over the 25 cap is truncated to the first 25.
+- **Non-subscribing:** a socket that calls only `rooms:status` (never
+  `room:join`) receives no `room:update` broadcast for those slugs.
+
+**Server (rate limiting):**
+- Bursting `rooms:status` / `room:info` past the limit → `{ error: ... }` ack,
+  socket stays connected.
+- `room:join` is never throttled by the limiter.
 
 **Client:**
 - `hmpp:rooms` reducer: add, dedupe by slug, cap at 12, `forget`, `clearAll`.
@@ -170,3 +232,8 @@ A compact strip inside the lobby Card, **below the "Create a room" button**:
 - Cross-device / cross-browser room history (no accounts).
 - Changing the server's name-uniquify-on-collision behaviour.
 - Live polling/refresh of room status after mount.
+- **Pre-existing enumeration hardening beyond this feature** (flag for a future
+  ticket): raising slug entropy, trimming `room:info`'s payload for non-members,
+  treating `sessionId` as a secret bearer token, and any global per-socket rate
+  cap. This feature gates the new endpoint and rate-limits the read endpoints;
+  the broader surface is deliberately left untouched.
