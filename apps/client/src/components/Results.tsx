@@ -52,7 +52,7 @@ export function Results({ room }: { room: PublicRoom }) {
         : 'bg-muted text-muted-foreground';
 
   return (
-    <div className="flex items-center gap-10">
+    <div className="flex items-center gap-10 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out">
       {hasNumbers && <Stat label="Average" value={r.average} />}
       {hasNumbers && <Stat label="Total" value={r.total} />}
       {STATUS_LABEL[r.voteStatus] && (

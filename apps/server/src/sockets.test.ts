@@ -65,7 +65,7 @@ describe('rooms:status', () => {
     const res = await status(a, 'sa', ['happy-otter']);
     expect(res).toEqual([
       { slug: 'happy-otter', active: true, connected: true, voter: true, hasVoted: false,
-        revealed: false, roundLabel: '', count: 1 },
+        revealed: false, roundLabel: '', count: 1, lastActivityAt: expect.any(Number) },
     ]);
     a.close();
   });

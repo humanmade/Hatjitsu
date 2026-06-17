@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeToggle } from './theme/ThemeToggle';
 import { Lobby } from './pages/Lobby';
 import { Room } from './pages/Room';
@@ -9,6 +9,7 @@ import { cn } from './lib/utils';
 
 export default function App() {
   const down = useSocketDown();
+  const location = useLocation();
   return (
     <div className="min-h-screen">
       {down && <ConnectionStatus />}
@@ -29,10 +30,14 @@ export default function App() {
         )}
         aria-hidden={down}
       >
-        <Routes>
-          <Route path="/" element={<Lobby />} />
-          <Route path="/room/:slug" element={<Room />} />
-        </Routes>
+        {/* Unkeyed: animate-in runs once on first paint. Route-to-route changes are
+            crossfaded by the View Transitions API (see navigate/Link `viewTransition`). */}
+        <div className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out">
+          <Routes location={location}>
+            <Route path="/" element={<Lobby />} />
+            <Route path="/room/:slug" element={<Room />} />
+          </Routes>
+        </div>
       </main>
     </div>
   );

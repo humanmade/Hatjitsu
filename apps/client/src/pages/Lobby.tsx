@@ -15,7 +15,7 @@ export function Lobby() {
     if (creating) return;
     setCreating(true);
     socket.emit('room:create', ({ slug }) => {
-      if (slug) navigate(`/room/${slug}`);
+      if (slug) navigate(`/room/${slug}`, { viewTransition: true });
       else setCreating(false);
     });
   };
@@ -24,7 +24,7 @@ export function Lobby() {
     // so it doesn't sit low. The columns form a natural-width group (not a stretched grid) so
     // the card↔text gap stays fixed and everything left-aligns consistently as width changes.
     <div className="flex min-h-[calc(100dvh-12rem)] items-center justify-center">
-      <div className="flex w-full flex-col items-start gap-12 md:w-auto md:flex-row md:items-start md:gap-16">
+      <div className="flex w-full flex-col items-start gap-12 md:w-auto md:flex-row md:items-center md:gap-16">
         <section className="flex flex-col items-start gap-6 sm:flex-row sm:items-start sm:gap-8">
           <FannedCards />
           <div className="flex max-w-xs flex-col items-start gap-6 text-left">

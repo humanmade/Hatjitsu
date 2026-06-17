@@ -73,6 +73,8 @@ export type RoomStatus =
       revealed: boolean;
       roundLabel: string;
       count: number;
+      /** Last completed round's reveal time, else the room's creation time. */
+      lastActivityAt: number;
     };
 
 /** The room:join ack: the public room plus the joiner's OWN vote (sent only to them, so

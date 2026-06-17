@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Loader2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -73,7 +74,7 @@ export function Room() {
 
   if (role === null) {
     return (
-      <Card className="mx-auto mt-12 flex max-w-md flex-col items-center gap-4 p-8 text-center">
+      <Card className="mx-auto mt-12 flex max-w-md flex-col items-center gap-4 p-8 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-300 motion-safe:ease-out">
         <h1 className="text-2xl font-bold">Join this room</h1>
         <p className="text-sm opacity-70">Would you like to vote, or just watch?</p>
         <div className="flex gap-3">
@@ -84,7 +85,13 @@ export function Room() {
     );
   }
 
-  if (!room) return <p>Joining room…</p>;
+  if (!room)
+    return (
+      <Card className="mx-auto mt-12 flex max-w-md flex-col items-center gap-4 p-8 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
+        <Loader2Icon className="size-6 text-muted-foreground motion-safe:animate-spin" aria-hidden />
+        <p className="text-sm text-muted-foreground">Joining room…</p>
+      </Card>
+    );
   const me = room.connections.find((c) => c.sessionId === sessionId);
   const pick = (vote: string) => {
     setMyVote(vote);
@@ -100,7 +107,7 @@ export function Room() {
     : null;
 
   return (
-    <div className="flex flex-col items-center gap-10 pt-12 pb-6 text-center">
+    <div className="flex flex-col items-center gap-10 pt-12 pb-6 text-center motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500 motion-safe:ease-out">
       <h1 className="text-base font-medium tracking-tight text-muted-foreground">Room: {room.slug}</h1>
       {/* Top "table": who has voted while open; the anonymous results once revealed. */}
       <div className="py-12">
@@ -114,6 +121,7 @@ export function Room() {
       {room.revealed && (
         <Button
           size="lg"
+          className="motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-300 motion-safe:ease-out"
           onClick={() => socket.emit('vote:reset', { slug }, (res) => { if ('error' in res) toast.error(res.error); })}
         >
           Start new vote

@@ -232,5 +232,6 @@ export function statusFor(s: RoomState, sessionId: string): RoomStatus {
     revealed: s.revealed,
     roundLabel: s.roundLabel,
     count: Object.keys(s.connections).length,
+    lastActivityAt: s.history.at(-1)?.timestamp ?? s.createdAt,
   };
 }

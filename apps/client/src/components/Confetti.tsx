@@ -37,7 +37,7 @@ export function Confetti({ count = 110 }: { count?: number }) {
           height: `${p.h}px`,
           background: p.color,
           borderRadius: p.round ? '9999px' : '2px',
-          animation: `hmpp-confetti-fall ${p.duration}s cubic-bezier(0.3,0.6,0.5,1) ${p.delay}s forwards`,
+          animation: `hmpp-confetti-fall ${p.duration}s cubic-bezier(0.3,0.6,0.5,1) ${p.delay}s both`,
           ['--drift']: `${p.drift}vw`,
           ['--spin']: `${p.spin}deg`,
         } as React.CSSProperties;
