@@ -22,9 +22,21 @@ export function useRecentRooms(): {
         if (Array.isArray(res)) setStatuses(res);
       });
     };
+    // Refresh on (re)connect, when the lobby tab regains focus (you voted elsewhere and came
+    // back), and on a gentle interval while the tab is visible — the lobby is transient, so
+    // this is cheap and keeps standing current without a live subscription.
+    const refreshIfVisible = () => { if (document.visibilityState === 'visible') fetchStatus(); };
     if (socket.connected) fetchStatus();
     socket.on('connect', fetchStatus);
-    return () => { socket.off('connect', fetchStatus); };
+    window.addEventListener('focus', refreshIfVisible);
+    document.addEventListener('visibilitychange', refreshIfVisible);
+    const poll = setInterval(refreshIfVisible, 15000);
+    return () => {
+      socket.off('connect', fetchStatus);
+      window.removeEventListener('focus', refreshIfVisible);
+      document.removeEventListener('visibilitychange', refreshIfVisible);
+      clearInterval(poll);
+    };
     // recent is captured once on mount; forget/clear update it directly below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -4,14 +4,14 @@ import { Lobby } from './pages/Lobby';
 import { Room } from './pages/Room';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import { NotifyToggle } from './components/NotifyToggle';
-import { useConnection } from './lib/useConnection';
+import { useSocketDown } from './lib/useConnection';
 import { cn } from './lib/utils';
 
 export default function App() {
-  const connected = useConnection();
+  const down = useSocketDown();
   return (
     <div className="min-h-screen">
-      {!connected && <ConnectionStatus />}
+      {down && <ConnectionStatus />}
       <header className="flex items-center justify-between p-4">
         <a href="/" className="group flex items-center gap-2.5 text-lg font-semibold tracking-tight">
           <img src="/hm-mark-red.svg" alt="Human Made" className="h-6 w-auto" />
@@ -25,9 +25,9 @@ export default function App() {
       <main
         className={cn(
           'p-4 max-w-5xl mx-auto transition-opacity',
-          !connected && 'pointer-events-none select-none opacity-50',
+          down && 'pointer-events-none select-none opacity-50',
         )}
-        aria-hidden={!connected}
+        aria-hidden={down}
       >
         <Routes>
           <Route path="/" element={<Lobby />} />

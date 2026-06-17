@@ -1,19 +1,23 @@
 import { useEffect, useState } from 'react';
 import { socket } from '@/lib/socket';
 
-// Tracks live socket connection state. socket.io auto-reconnects, so we only
-// need to mirror connect/disconnect into React for the offline banner + lock.
-export function useConnection(): boolean {
-  const [connected, setConnected] = useState(socket.connected);
+// Tracks socket connection state for the offline banner + input lock, but with a grace
+// period: a normal page-load connect (~100ms) or a momentary blip shouldn't flash the red
+// bar. We only report "down" after the socket has been continuously disconnected for graceMs.
+export function useSocketDown(graceMs = 750): boolean {
+  const [down, setDown] = useState(false);
   useEffect(() => {
-    const up = () => setConnected(true);
-    const down = () => setConnected(false);
-    socket.on('connect', up);
-    socket.on('disconnect', down);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const markDown = () => { if (!timer) timer = setTimeout(() => { timer = null; setDown(true); }, graceMs); };
+    const markUp = () => { if (timer) { clearTimeout(timer); timer = null; } setDown(false); };
+    if (socket.connected) markUp(); else markDown();
+    socket.on('connect', markUp);
+    socket.on('disconnect', markDown);
     return () => {
-      socket.off('connect', up);
-      socket.off('disconnect', down);
+      if (timer) clearTimeout(timer);
+      socket.off('connect', markUp);
+      socket.off('disconnect', markDown);
     };
-  }, []);
-  return connected;
+  }, [graceMs]);
+  return down;
 }
