@@ -9,15 +9,27 @@ import { RoomStore } from './store/roomStore.js';
 import * as room from './domain/room.js';
 import { logger } from './logger.js';
 import { createRateLimiter } from './rateLimit.js';
-import { RATE_LIMITS } from './config.js';
+import { RATE_LIMITS, EJECT_GRACE_MS } from './config.js';
 
 type IO = Server<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 type IOSocket = Socket<ClientToServerEvents, ServerToClientEvents, Record<string, never>, SocketData>;
 
-export function registerHandlers(io: IO, store: RoomStore): void {
+export function registerHandlers(io: IO, store: RoomStore, ejectGraceMs = EJECT_GRACE_MS): void {
   const broadcast = async (slug: string) => {
     const state = await store.load(slug);
     if (state) io.to(slug).emit('room:update', room.publicView(state));
+  };
+
+  // Deferred half of eject-on-leave: once the grace window elapses, drop the participant if
+  // they never came back. evict() is a no-op if they reconnected, so a wifi blip / redeploy
+  // reconnect keeps their seat and vote.
+  const reap = async (slug: string, sessionId: string) => {
+    const state = await store.load(slug);
+    if (!state || !state.ejectOnLeave) return;
+    const next = room.evict(state, sessionId);
+    if (next === state) return; // reconnected during grace — leave them be
+    if (room.clientCount(next) === 0) await store.delete(slug);
+    else { await store.save(next); io.to(slug).emit('room:update', room.publicView(next)); }
   };
 
   io.on('connection', (socket: IOSocket) => {
@@ -181,13 +193,17 @@ export function registerHandlers(io: IO, store: RoomStore): void {
 
     socket.on('disconnecting', async () => {
       const slug = socket.data.slug;
+      const sessionId = socket.data.sessionId;
       if (!slug) return;
       const state = await store.load(slug);
       if (!state) return;
-      const next = room.leave(state, socket.id, state.ejectOnLeave);
-      // Eject mode tidies up empty rooms immediately; keep mode lets them persist (TTL).
-      if (state.ejectOnLeave && room.clientCount(next) === 0) await store.delete(slug);
-      else { await store.save(next); io.to(slug).emit('room:update', room.publicView(next)); }
+      // Drop just this socket but keep the seat on the roster — even in eject mode — so a
+      // reconnecting tab (wifi blip, redeploy) re-registers and keeps its vote. The actual
+      // eject is deferred to reap() after a grace window; a reconnect cancels it implicitly.
+      const next = room.leave(state, socket.id, false);
+      await store.save(next);
+      io.to(slug).emit('room:update', room.publicView(next));
+      if (state.ejectOnLeave) setTimeout(() => { void reap(slug, sessionId); }, ejectGraceMs);
       logger.debug('socket disconnecting', { id: socket.id, slug });
     });
   });

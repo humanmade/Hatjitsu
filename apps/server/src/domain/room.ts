@@ -93,6 +93,18 @@ export function leave(s: RoomState, socketId: string, ejectOnLeave = true): Room
   return maybeReveal(next);
 }
 
+/** The deferred half of eject-on-leave: drop a participant who still has no live sockets.
+ * A no-op (returns the same state) once they've reconnected, so a brief drop — wifi blip or
+ * a redeploy — keeps their seat and vote. Like `leave`, removing an away voter may complete
+ * the round for whoever remains. */
+export function evict(s: RoomState, sessionId: string): RoomState {
+  const conn = s.connections[sessionId];
+  if (!conn || conn.socketIds.length > 0) return s;
+  const next = clone(s);
+  delete next.connections[sessionId];
+  return maybeReveal(next);
+}
+
 export function recordVote(s: RoomState, sessionId: string, vote: Vote): RoomState {
   if (s.revealed) return s; // votes are locked once the round is revealed
   const next = clone(s);

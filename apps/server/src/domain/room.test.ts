@@ -3,7 +3,7 @@ import {
   createRoom, enter, leave, recordVote, clearVote, resetVotes,
   forceReveal, toggleVoter, setCardPack, setEjectOnLeave, purgeStalePresence,
   isFacilitator, facilitatorClaimable, claimFacilitator, passFacilitator,
-  manualRevealBlocked, votingFinished, clientCount, publicView, statusFor,
+  manualRevealBlocked, votingFinished, clientCount, publicView, statusFor, evict,
 } from './room';
 import { REVEAL_COOLDOWN_MS } from '@hmpp/shared';
 
@@ -171,6 +171,25 @@ describe('Room domain', () => {
     s = leave(s, 'sb', true);
     expect(s.connections['b']).toBeUndefined();
     expect(clientCount(s)).toBe(1);
+  });
+
+  it('evict removes a participant who has no live sockets', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = leave(s, 'sb', false); // b retained but disconnected (grace window)
+    expect(s.connections['b']).toBeDefined();
+    s = evict(s, 'b');
+    expect(s.connections['b']).toBeUndefined();
+    expect(s.connections['a']).toBeDefined();
+  });
+
+  it('evict is a no-op once the participant has reconnected', () => {
+    let s = createRoom('r'); s = join(s, 'a', 'sa'); s = join(s, 'b', 'sb');
+    s = leave(s, 'sb', false);                          // b drops...
+    s = enter(s, { sessionId: 'b', socketId: 'sb2' });  // ...then reconnects within grace
+    const before = s;
+    s = evict(s, 'b');
+    expect(s).toBe(before);                             // unchanged: still has a live socket
+    expect(s.connections['b']!.socketIds).toContain('sb2');
   });
 
   it('keeps a disconnected participant in the roster (keep mode)', () => {

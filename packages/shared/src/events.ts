@@ -23,6 +23,9 @@ export interface ClientToServerEvents {
 
 export interface ServerToClientEvents {
   'room:update': (room: PublicRoom) => void;
+  // Broadcast to everyone when the server is shutting down (e.g. a redeploy) so clients can
+  // set expectations before the socket drops and auto-reconnect takes over.
+  'server:maintenance': () => void;
 }
 
 export interface SocketData {

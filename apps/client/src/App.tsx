@@ -7,10 +7,13 @@ import { NotifyToggle } from './components/NotifyToggle';
 import { FacilitatorMenu } from './components/FacilitatorMenu';
 import { RoomLink } from './components/RoomLink';
 import { useSocketDown } from './lib/useConnection';
+import { useMaintenanceToast } from './lib/useMaintenanceToast';
+import { socket } from './lib/socket';
 import { cn } from './lib/utils';
 
 export default function App() {
   const down = useSocketDown();
+  useMaintenanceToast(socket);
   const location = useLocation();
   return (
     <div className="min-h-screen">

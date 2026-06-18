@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import { Server } from 'socket.io';
 import { createApp } from './http.js';
 import { registerHandlers } from './sockets.js';
+import { gracefulShutdown } from './shutdown.js';
 import { RoomStore } from './store/roomStore.js';
 import * as room from './domain/room.js';
 import { PORT, DATA_DIR, DB_PATH } from './config.js';
@@ -42,6 +43,18 @@ async function main() {
   registerHandlers(io, store);
 
   httpServer.listen(PORT, () => logger.info('server listening', { port: PORT }));
+
+  // On a redeploy the platform sends SIGTERM (SIGINT locally). Warn connected clients before
+  // we close so they see a maintenance notice; the once-guard ignores a repeated signal.
+  let shuttingDown = false;
+  const shutdown = (signal: NodeJS.Signals) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logger.info('shutting down', { signal });
+    gracefulShutdown(io, store).then(() => process.exit(0), () => process.exit(1));
+  };
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
 main();

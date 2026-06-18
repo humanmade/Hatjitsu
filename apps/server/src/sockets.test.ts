@@ -35,6 +35,40 @@ describe('socket handlers', () => {
     a.close();
   });
 
+  it('keeps a voter’s seat and vote across a brief reconnect (eject mode)', async () => {
+    const a = connect();
+    await join(a, 'r', 'sa');
+    await new Promise<void>((res) => a.emit('vote', { slug: 'r', vote: '5' }, () => res()));
+    a.close(); // wifi blip / redeploy drops the socket
+    await new Promise((r) => setTimeout(r, 60)); // let 'disconnecting' land server-side
+    const a2 = connect();
+    const room = (await join(a2, 'r', 'sa')) as PublicRoom & { yourVote?: string | null };
+    expect(room.yourVote).toBe('5'); // the returning tab restores its own selection
+    expect(room.connections.find((c) => c.sessionId === 'sa')?.hasVoted).toBe(true);
+    a2.close();
+  });
+
+  it('evicts a participant who never returns, once the grace window elapses (eject mode)', async () => {
+    // Own server with a tiny grace so the test doesn't wait 30s.
+    const hs = createServer();
+    const io = new Server(hs);
+    registerHandlers(io, new RoomStore(':memory:', 100), 40);
+    await new Promise<void>((r) => hs.listen(0, r));
+    const u = `http://localhost:${(hs.address() as { port: number }).port}`;
+    const mk = () => ioc(u, { transports: ['websocket'], forceNew: true });
+    const jn = (s: Socket, sid: string) =>
+      new Promise<PublicRoom>((res) => s.emit('room:join', { slug: 'r', sessionId: sid, voter: true }, res as never));
+
+    const a = mk(); const b = mk();
+    await jn(a, 'sa'); await jn(b, 'sb');
+    b.close(); // b drops and does not come back
+    await new Promise((r) => setTimeout(r, 150)); // well past the 40ms grace
+    const res = (await new Promise<RoomStatus[]>((res) =>
+      a.emit('rooms:status', { sessionId: 'sa', slugs: ['r'] }, res as never)));
+    expect((res[0] as RoomStatus & { count: number }).count).toBe(1); // b evicted, only a remains
+    a.close(); hs.close();
+  });
+
   it('hides votes until all voters have voted', async () => {
     const a = connect(); const b = connect();
     await join(a, 'r', 'sa'); await join(b, 'r', 'sb');
