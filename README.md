@@ -1,32 +1,23 @@
 # HM Planning Poker
 
-Originally Hatjitsu, create disposable online [Planning Poker](http://en.wikipedia.org/wiki/Planning_poker) rooms for quick and easy estimations.
+Disposable, real-time planning-poker rooms. React + Express + Socket.io, durable SQLite
+room state on a persistent volume.
 
-## Features
+## Develop
+    nvm use
+    npm install
+    npm run dev:server       # :5099 (creates ./data/rooms.db)
+    npm run dev:client       # Vite dev server, proxies /socket.io to :5099
 
-* Simple interface
-* No login/signup required
-* Votes are kept hidden until all have voted to prevent coercion
-* 'Observer feature' - watch the planning session without having to vote
-* Multiple planning card decks
-* Adaptive design allows to work on desktop, tablet and mobile
+## Test
+    npm test                 # unit + integration across workspaces (in-memory SQLite)
 
-## Installation
+## Build & run
+    npm run build
+    DATA_DIR=./data npm start
 
-```sh
-nvm use
-npm install -d
-npm start
-```
-
-[http://localhost:5099](http://localhost:5099)
-
-## Deployment
-
-To update planning poker:
-
- - clone the repository using the heroku cli tool
- - add this repo as a `github` remote
- - checkout the github master branch
- - pull down changes, then switch to heroku `main` branch
- - merge `master` into `main` and push. You should see build progress in the `git push` output.
+## Deploy
+Push to `main`; Render (or Railway) auto-deploys the Docker image. State lives in a SQLite
+DB on a persistent disk/volume mounted at `/data` (`DATA_DIR=/data`) — no external database
+service. See `render.yaml` / `railway.toml`. An optional `.github/workflows/deploy.yml`
+publishes to `tools.hmn.md` for temporary internal pre-launch testing only.

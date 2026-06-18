@@ -1,4 +1,7 @@
 node_modules
+**/node_modules
+**/dist
 .git
-.claude
-*.md
+.playwright
+coverage
+.e2e-data

@@ -1,0 +1,15 @@
+{
+  "name": "@hmpp/shared",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": { "unique-names-generator": "^4.7.1", "zod": "^3.23.8" },
+  "devDependencies": { "typescript": "^5.5.0", "vitest": "^2.0.0" }
+}
