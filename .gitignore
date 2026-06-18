@@ -7,5 +7,7 @@ coverage
 .e2e-data
 .devdata
 /data
+data/
+*.tsbuildinfo
 test-results
 playwright-report
