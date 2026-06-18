@@ -11,7 +11,9 @@ createRoot(document.getElementById('root')!).render(
     <ThemeProvider>
       <BrowserRouter>
         <App />
-        <Toaster richColors position="top-center" />
+        {/* offset clears the fixed ConnectionStatus banner (top-0, ~36px) so the maintenance
+            toast — which shows at the same time — sits below it rather than overlapping. */}
+        <Toaster richColors position="top-center" offset={56} />
       </BrowserRouter>
     </ThemeProvider>
   </StrictMode>,

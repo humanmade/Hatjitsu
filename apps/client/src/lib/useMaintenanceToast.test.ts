@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 
 const toast = vi.fn();
-vi.mock('sonner', () => ({ toast: (...a: unknown[]) => toast(...a) }));
+const dismiss = vi.fn();
+vi.mock('sonner', () => ({
+  toast: Object.assign((...a: unknown[]) => toast(...a), { dismiss: (...a: unknown[]) => dismiss(...a) }),
+}));
 
 import { useMaintenanceToast } from './useMaintenanceToast';
 
@@ -15,23 +18,34 @@ function fakeSocket() {
   };
 }
 
-beforeEach(() => { toast.mockClear(); });
+beforeEach(() => { toast.mockClear(); dismiss.mockClear(); });
 
 describe('useMaintenanceToast', () => {
-  it('toasts a "back soon" notice when the server announces maintenance', () => {
+  it('shows a "back soon" notice that stays put until reconnect', () => {
     const socket = fakeSocket();
     renderHook(() => useMaintenanceToast(socket));
-    expect(toast).not.toHaveBeenCalled();
     socket.fire('server:maintenance');
     expect(toast).toHaveBeenCalledTimes(1);
-    expect(String(toast.mock.calls[0][0])).toContain('back soon');
+    const [msg, opts] = toast.mock.calls[0] as [unknown, { duration?: number }];
+    expect(String(msg)).toContain('back soon');
+    expect(opts.duration).toBe(Infinity); // no auto-dismiss while we're down
   });
 
-  it('unsubscribes on unmount', () => {
+  it('dismisses the notice once the socket reconnects', () => {
+    const socket = fakeSocket();
+    renderHook(() => useMaintenanceToast(socket));
+    socket.fire('server:maintenance');
+    socket.fire('connect');
+    expect(dismiss).toHaveBeenCalled();
+  });
+
+  it('unsubscribes from both events on unmount', () => {
     const socket = fakeSocket();
     const { unmount } = renderHook(() => useMaintenanceToast(socket));
     unmount();
     socket.fire('server:maintenance');
+    socket.fire('connect');
     expect(toast).not.toHaveBeenCalled();
+    expect(dismiss).not.toHaveBeenCalled();
   });
 });
